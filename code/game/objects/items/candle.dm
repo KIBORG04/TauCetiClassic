@@ -39,7 +39,7 @@ var/global/list/obj/item/candle/ghost/ghost_candles = list()
 		START_PROCESSING(SSobj, src)
 		playsound(src, 'sound/items/matchstick_light.ogg', VOL_EFFECTS_MASTER, null, FALSE)
 
-/obj/item/candle/update_icon()
+/obj/item/candle/proc/calculate_lighting_stage(wax)
 	var/lighning_stage
 	if(wax > 450)
 		lighning_stage = 1
@@ -47,11 +47,37 @@ var/global/list/obj/item/candle/ghost/ghost_candles = list()
 		lighning_stage = 2
 	else
 		lighning_stage = 3
-	icon_state = "[initial(icon_state)][lighning_stage][lit ? "_lit" : ""]"
-	if(lit)
-		item_state = "[initial(icon_state)]_lit"
+	return lighning_stage
+
+/obj/item/candle/update_icon()
+	if(!istype(src, /obj/item/candle/chandelier))
+		var/lighning_stage = calculate_lighting_stage(wax)
+		icon_state = "[initial(icon_state)][lighning_stage][lit ? "_lit" : ""]"
+		if(lit)
+			item_state = "[initial(icon_state)]_lit"
+		else
+			item_state = "[initial(icon_state)]"
 	else
-		item_state = "[initial(icon_state)]"
+		var/obj/item/candle/chandelier/chandelier = src
+		for(var/i in chandelier.place)
+			if(chandelier.candles[i])
+				var/obj/item/candle/C = chandelier.candles[i]
+				var/lighning_stage = calculate_lighting_stage(C.wax)
+				if(C.lit)
+					cut_overlay("[i]_[lighning_stage]")
+					add_overlay("[i]_[lighning_stage]_lit")
+				if(C.wax >= 450 && C.wax <= 445)
+					cut_overlay("[i]_[lighning_stage - 1][C.lit ? "_lit" : ""]")
+					add_overlay("[i]_[lighning_stage][C.lit ? "_lit" : ""]")
+				else if(C.wax >= 200 && C.wax <= 195)
+					cut_overlay("[i]_[lighning_stage - 1][C.lit ? "_lit" : ""]")
+					add_overlay("[i]_[lighning_stage][C.lit ? "_lit" : ""]")
+				else if(C.wax >= 100 && C.wax <= 95)
+					cut_overlay("[i]_[lighning_stage - 1][C.lit ? "_lit" : ""]")
+					add_overlay("[i]_[lighning_stage][C.lit ? "_lit" : ""]")
+				else if(C.wax == 0)
+					cut_overlay("[i]_[lighning_stage - 1][C.lit ? "_lit" : ""]")
+					add_overlay("[i]_[lighning_stage][C.lit ? "_lit" : ""]")
 	if(istype(loc, /mob))
 		var/mob/M = loc
 		if(ishuman(M))
@@ -205,5 +231,71 @@ var/global/list/obj/item/candle/ghost/ghost_candles = list()
 /obj/item/candle/infinite
 	infinite = TRUE
 	start_lit = TRUE
+
+/obj/item/candle/chandelier
+	name = "Chandelier"
+
+	icon_state = "chandelier"
+	item_state = "chandelier"
+
+	// ref on candle in chandelier
+	var/list/obj/item/candle/candles = list(
+		"left" = null,
+		"central" = null,
+		"right" = null,
+	)
+
+	var/list/place = list("left", "central", "right")
+
+/obj/item/candle/chandelier/attackby(obj/item/weapon/W, mob/user)
+	if(istype(W, /obj/item/candle))
+		for(var/i in place)
+			if(!candles[i])
+				var/obj/item/candle/C = W
+				candles[i] = C
+				usr.remove_from_mob(C)
+				C.loc = src
+				var/lighning_stage = calculate_lighting_stage(C.wax)
+				add_overlay("[i]_[lighning_stage][C.lit ? "_lit" : ""]")
+				break
+	else
+		for(var/i in place)
+			if(candles[i])
+				var/obj/item/candle/candle = candles[i]
+				if(candle.lit)
+					continue
+				if(iswelder(W))
+					var/obj/item/weapon/weldingtool/WT = W
+					if(WT.isOn())
+						candle.light("<span class='warning'>[user] casually lights the [name] with [W].</span>")
+						break
+				else if(istype(W, /obj/item/weapon/lighter))
+					var/obj/item/weapon/lighter/L = W
+					if(L.lit)
+						candle.light()
+						break
+				else if(istype(W, /obj/item/weapon/match))
+					var/obj/item/weapon/match/M = W
+					if(M.lit)
+						candle.light()
+						break
+				else if(istype(W, /obj/item/candle))
+					var/obj/item/candle/C = W
+					if(C.lit)
+						candle.light()
+						break
+
+/obj/item/candle/chandelier/process()
+	if(!candles["left"] && !candles["central"] && !candles["right"])
+		return
+	update_icon()
+
+/obj/item/candle/chandelier/atom_init()
+	. = ..()
+	START_PROCESSING(SSobj, src)
+
+/obj/item/candle/chandelier/Destroy()
+	STOP_PROCESSING(SSobj, src)
+	return ..()
 
 #undef CANDLE_LUMINOSITY
