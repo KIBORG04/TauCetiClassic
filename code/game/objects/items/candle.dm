@@ -40,19 +40,19 @@ var/global/list/obj/item/candle/ghost/ghost_candles = list()
 		playsound(src, 'sound/items/matchstick_light.ogg', VOL_EFFECTS_MASTER, null, FALSE)
 
 /obj/item/candle/proc/calculate_lighting_stage(wax)
-	var/lighning_stage
+	var/lightning_stage
 	if(wax > 450)
-		lighning_stage = 1
+		lightning_stage = 1
 	else if(wax > 200)
-		lighning_stage = 2
+		lightning_stage = 2
 	else
-		lighning_stage = 3
-	return lighning_stage
+		lightning_stage = 3
+	return lightning_stage
 
 /obj/item/candle/update_icon()
 	if(!istype(src, /obj/item/candle/chandelier))
-		var/lighning_stage = calculate_lighting_stage(wax)
-		icon_state = "[initial(icon_state)][lighning_stage][lit ? "_lit" : ""]"
+		var/lightning_stage = calculate_lighting_stage(wax)
+		icon_state = "[initial(icon_state)][lightning_stage][lit ? "_lit" : ""]"
 		if(lit)
 			item_state = "[initial(icon_state)]_lit"
 		else
@@ -62,22 +62,22 @@ var/global/list/obj/item/candle/ghost/ghost_candles = list()
 		for(var/i in chandelier.place)
 			if(chandelier.candles[i])
 				var/obj/item/candle/C = chandelier.candles[i]
-				var/lighning_stage = calculate_lighting_stage(C.wax)
+				var/lightning_stage = calculate_lighting_stage(C.wax)
 				if(C.lit)
-					cut_overlay("[i]_[lighning_stage]")
-					add_overlay("[i]_[lighning_stage]_lit")
-				if(C.wax >= 450 && C.wax <= 445)
-					cut_overlay("[i]_[lighning_stage - 1][C.lit ? "_lit" : ""]")
-					add_overlay("[i]_[lighning_stage][C.lit ? "_lit" : ""]")
-				else if(C.wax >= 200 && C.wax <= 195)
-					cut_overlay("[i]_[lighning_stage - 1][C.lit ? "_lit" : ""]")
-					add_overlay("[i]_[lighning_stage][C.lit ? "_lit" : ""]")
-				else if(C.wax >= 100 && C.wax <= 95)
-					cut_overlay("[i]_[lighning_stage - 1][C.lit ? "_lit" : ""]")
-					add_overlay("[i]_[lighning_stage][C.lit ? "_lit" : ""]")
+					cut_overlay(image('icons/obj/candle.dmi', "[i]_[lightning_stage]"))
+					add_overlay(image('icons/obj/candle.dmi', "[i]_[lightning_stage]_lit"))
+				if(C.wax >= 450)
+					cut_overlay(image('icons/obj/candle.dmi', "[i]_[lightning_stage - 1][C.lit ? "_lit" : ""]"))
+					add_overlay(image('icons/obj/candle.dmi', "[i]_[lightning_stage][C.lit ? "_lit" : ""]"))
+				else if(C.wax >= 200)
+					cut_overlay(image('icons/obj/candle.dmi', "[i]_[lightning_stage - 1][C.lit ? "_lit" : ""]"))
+					add_overlay(image('icons/obj/candle.dmi', "[i]_[lightning_stage][C.lit ? "_lit" : ""]"))
+				else if(C.wax >= 100)
+					cut_overlay(image('icons/obj/candle.dmi', "[i]_[lightning_stage - 1][C.lit ? "_lit" : ""]"))
+					add_overlay(image('icons/obj/candle.dmi', "[i]_[lightning_stage][C.lit ? "_lit" : ""]"))
 				else if(C.wax == 0)
-					cut_overlay("[i]_[lighning_stage - 1][C.lit ? "_lit" : ""]")
-					add_overlay("[i]_[lighning_stage][C.lit ? "_lit" : ""]")
+					cut_overlay(image('icons/obj/candle.dmi', "[i]_[lightning_stage - 1][C.lit ? "_lit" : ""]"))
+					add_overlay(image('icons/obj/candle.dmi', "[i]_[4]"))
 	if(istype(loc, /mob))
 		var/mob/M = loc
 		if(ishuman(M))
@@ -238,6 +238,10 @@ var/global/list/obj/item/candle/ghost/ghost_candles = list()
 	icon_state = "chandelier"
 	item_state = "chandelier"
 
+	w_class = ITEM_SIZE_NORMAL
+
+	var/count_candles = 0
+
 	// ref on candle in chandelier
 	var/list/obj/item/candle/candles = list(
 		"left" = null,
@@ -255,12 +259,13 @@ var/global/list/obj/item/candle/ghost/ghost_candles = list()
 				candles[i] = C
 				usr.remove_from_mob(C)
 				C.loc = src
-				var/lighning_stage = calculate_lighting_stage(C.wax)
-				add_overlay("[i]_[lighning_stage][C.lit ? "_lit" : ""]")
+				var/lightning_stage = calculate_lighting_stage(C.wax)
+				add_overlay(image('icons/obj/candle.dmi', "[i]_[lightning_stage][C.lit ? "_lit" : ""]"))
 				break
 	else
 		for(var/i in place)
 			if(candles[i])
+				count_candles += 1
 				var/obj/item/candle/candle = candles[i]
 				if(candle.lit)
 					continue
@@ -268,22 +273,38 @@ var/global/list/obj/item/candle/ghost/ghost_candles = list()
 					var/obj/item/weapon/weldingtool/WT = W
 					if(WT.isOn())
 						candle.light("<span class='warning'>[user] casually lights the [name] with [W].</span>")
+						set_light(CANDLE_LUMINOSITY, count_candles)
 						break
 				else if(istype(W, /obj/item/weapon/lighter))
 					var/obj/item/weapon/lighter/L = W
 					if(L.lit)
 						candle.light()
+						set_light(CANDLE_LUMINOSITY, count_candles)
 						break
 				else if(istype(W, /obj/item/weapon/match))
 					var/obj/item/weapon/match/M = W
 					if(M.lit)
 						candle.light()
+						set_light(CANDLE_LUMINOSITY, count_candles)
 						break
 				else if(istype(W, /obj/item/candle))
 					var/obj/item/candle/C = W
 					if(C.lit)
 						candle.light()
+						set_light(CANDLE_LUMINOSITY, count_candles)
 						break
+
+/obj/item/candle/chandelier/attack_self(mob/living/carbon/human/user)
+	for(var/i in place)
+		if(candles[i])
+			var/obj/item/candle/C = candles[i]
+			var/lightning_stage = calculate_lighting_stage(C.wax)
+			count_candles -= 1
+			cut_overlay(image('icons/obj/candle.dmi', "[i]_[lightning_stage][C.lit ? "_lit" : ""]"))
+			set_light(CANDLE_LUMINOSITY, count_candles)
+			user.put_in_hands(C)
+			candles[i] = null
+			break
 
 /obj/item/candle/chandelier/process()
 	if(!candles["left"] && !candles["central"] && !candles["right"])
