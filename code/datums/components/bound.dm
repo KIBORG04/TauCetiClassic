@@ -18,6 +18,7 @@
 	resolve_callback = _resolve_callback
 
 	RegisterSignal(bound_to, list(COMSIG_MOVABLE_MOVED, COMSIG_MOVABLE_LOC_MOVED), .proc/check_bounds)
+	RegisterSignal(bound_to, list(COMSIG_PARENT_QDELETED), .proc/on_bound_destroyed)
 	RegisterSignal(parent, list(COMSIG_MOVABLE_MOVED), .proc/check_bounds)
 	RegisterSignal(parent, list(COMSIG_MOVABLE_PRE_MOVE), .proc/on_try_move)
 
@@ -34,19 +35,20 @@
 	if(resolve_callback && resolve_callback.Invoke(src))
 		return
 
-	var/atom/movable/P = parent
+	var/atom/movable/AM = parent
+	var/turf/parent_turf = get_turf(AM)
 	var/turf/T = get_turf(bound_to)
 
-	var/new_x = P.x
-	var/new_y = P.y
+	var/new_x = parent_turf.x
+	var/new_y = parent_turf.y
 
 	// A very exotic case of item being in inventory, or some bull like that.
 	var/did_jump = FALSE
-	if(bound_to in parent)
-		jump_out_of(parent, bound_to)
+	if(bound_to in AM)
+		jump_out_of(AM, bound_to)
 		did_jump = TRUE
-	else if(parent in bound_to)
-		jump_out_of(bound_to, parent)
+	else if(AM.loc != parent_turf)
+		jump_out_of(AM.loc, AM)
 		did_jump = TRUE
 
 	if(did_jump)
@@ -59,28 +61,28 @@
 
 		new_x = T.x + min_dist * pick(opts_x)
 		new_y = T.y + min_dist * pick(opts_y)
-		P.forceMove(locate(new_x, new_y, T.z))
+		AM.forceMove(locate(new_x, new_y, T.z))
 		return
 
-	if(P.x > T.x + max_dist)
+	if(parent_turf.x > T.x + max_dist)
 		new_x = T.x + max_dist
-	else if(P.x < T.x - max_dist)
+	else if(parent_turf.x < T.x - max_dist)
 		new_x = T.x - max_dist
-	else if(P.x <= T.x + min_dist)
+	else if(parent_turf.x <= T.x + min_dist)
 		new_x = T.x + min_dist
-	else if(P.x >= T.x - min_dist)
+	else if(parent_turf.x >= T.x - min_dist)
 		new_x = T.x - min_dist
 
-	if(P.y > T.y + max_dist)
+	if(parent_turf.y > T.y + max_dist)
 		new_y = T.y + max_dist
-	else if(P.y < T.y - max_dist)
+	else if(parent_turf.y < T.y - max_dist)
 		new_y = T.y - max_dist
-	else if(P.y <= T.y + min_dist)
+	else if(parent_turf.y <= T.y + min_dist)
 		new_y = T.y + min_dist
-	else if(P.y >= T.y - min_dist)
+	else if(parent_turf.y >= T.y - min_dist)
 		new_y = T.y - min_dist
 
-	P.forceMove(locate(new_x, new_y, T.z))
+	AM.forceMove(locate(new_x, new_y, T.z))
 
 // Is called when bounds are inside bounded(or vice-versa), yet they shouldn't be.
 /datum/component/bounded/proc/jump_out_of(atom/container, atom/movable/escapee)
@@ -100,7 +102,14 @@
 
 // This proc is called when bound thing tries to move.
 /datum/component/bounded/proc/on_try_move(datum/source, atom/newLoc, dir)
-	var/dist = get_dist(newLoc, get_turf(bound_to))
+	var/turf/T = get_turf(bound_to)
+	var/dist = get_dist(newLoc, T)
+	if(dist == -1 && newLoc == T)
+		dist = 0
 	if(dist < min_dist || dist > max_dist)
 		return COMPONENT_MOVABLE_BLOCK_PRE_MOVE
 	return NONE
+
+/datum/component/bounded/proc/on_bound_destroyed(force, qdel_hint)
+	// Perhaps add an abilities to resolve this situation with a callback? ~Luduk
+	qdel(src)
