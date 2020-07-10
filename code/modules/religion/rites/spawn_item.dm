@@ -127,7 +127,7 @@
 
 /datum/religion_rites/spawn_item/call_animal/modify_item(atom/animal)
 	for(var/mob/dead/observer/O in observer_list)
-		if(O.has_enabled_antagHUD == TRUE && config.antag_hud_restricted)
+		if(O.has_enabled_antagHUD && config.antag_hud_restricted)
 			continue
 		if(jobban_isbanned(O, ROLE_GHOSTLY) && role_available_in_minutes(O, ROLE_GHOSTLY))
 			continue
@@ -154,6 +154,7 @@
 		M.ckey = candidate.ckey
 		M.name = "familiar of [god_name] [num2roman(rand(1, 20))]"
 		M.real_name = M.name
+		M.mind.holy_role = HOLY_ROLE_FAMILIAR
 		candidate.cancel_camera()
 		candidate.reset_view()
 	else if (response == "Never for this round")
@@ -164,7 +165,7 @@
 	if(!.)
 		return FALSE
 
-	for(var/mob/living/carbon/human/M in viewers(usr.loc, null))
+	for(var/mob/living/carbon/human/M in viewers(AOG.loc))
 		if(M.mind && !M.mind.holy_role && M.eyecheck() <= 0)
 			M.flash_eyes()
 
@@ -209,7 +210,7 @@
 	if(!.)
 		return FALSE
 
-	for(var/mob/living/carbon/human/M in viewers(usr.loc, null))
+	for(var/mob/living/carbon/human/M in viewers(AOG.loc))
 		if(M.mind && !M.mind.holy_role && M.eyecheck() <= 0)
 			M.flash_eyes()
 

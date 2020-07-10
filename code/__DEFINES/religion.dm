@@ -16,6 +16,7 @@
 	)
 
 //Holy role
+#define HOLY_ROLE_FAMILIAR 0
 #define HOLY_ROLE_PRIEST 1 //default priestly role
 #define HOLY_ROLE_HIGHPRIEST 2 //the one who designates the religion
 

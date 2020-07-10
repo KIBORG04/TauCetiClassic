@@ -148,6 +148,9 @@
 	// A dict of holy turfs of format holy_turf = timer_id.
 	var/list/holy_turfs = list()
 
+	// Animals and others slaves of religion
+	var/list/mob/familiars = list()
+
 /datum/religion/New()
 	reset_religion()
 

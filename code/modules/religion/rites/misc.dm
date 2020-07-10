@@ -176,7 +176,8 @@
 
 	if(anim_items && anim_items.len != 0)
 		for(var/obj/item/O in anim_items)
-			new /mob/living/simple_animal/hostile/mimic/copy/religion(O.loc, O)
+			var/mob/living/simple_animal/hostile/mimic/copy/religion/amimal = new(O.loc, O)
+			AOG.religion.familiars += amimal
 
 	user.visible_message("<span class='notice'>[user] has been finished the rite of [name]!</span>")
 	return TRUE
