@@ -26,6 +26,7 @@
 	status_flags = 0
 	faction = "cult"
 	status_flags = CANPUSH
+	butcher_results = list(/obj/item/weapon/reagent_containers/food/snacks/ectoplasm)
 
 	animalistic = FALSE
 	has_head = TRUE
