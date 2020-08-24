@@ -37,6 +37,7 @@ var/global/list/radial_menus = list()
 /obj/screen/radial/center
 	name = "Close Menu"
 	icon_state = "radial_center"
+	var/description
 
 /obj/screen/radial/center/MouseEntered(location, control, params)
 	. = ..()
@@ -263,6 +264,11 @@ var/global/list/radial_menus = list()
 	menu_holder = image(icon='icons/effects/effects.dmi',loc=anchor,icon_state="nothing",layer = ABOVE_HUD_LAYER)
 	menu_holder.plane = ABOVE_HUD_PLANE
 	menu_holder.appearance_flags |= KEEP_APART
+	close_button.maptext = close_button.description
+	close_button.maptext_y = 5
+	close_button.maptext_x = -32
+	close_button.maptext_height = 96
+	close_button.maptext_width = 96
 	menu_holder.vis_contents += elements + close_button
 	current_user.images += menu_holder
 
@@ -286,7 +292,7 @@ var/global/list/radial_menus = list()
 	Choices should be a list where list keys are movables or text used for element names and return value
 	and list values are movables/icons/images used for element icons
 */
-/proc/show_radial_menu(mob/user, atom/anchor, list/choices, uniqueid, radius, datum/callback/custom_check, require_near = FALSE, tooltips = FALSE, no_repeat_close = FALSE)
+/proc/show_radial_menu(mob/user, atom/anchor, list/choices, uniqueid, radius, datum/callback/custom_check, require_near = FALSE, tooltips = FALSE, no_repeat_close = FALSE, desc)
 	if(!user || !anchor || !length(choices))
 		return
 	if(!uniqueid)
@@ -304,6 +310,8 @@ var/global/list/radial_menus = list()
 		menu.radius = radius
 	if(istype(custom_check))
 		menu.custom_check_callback = custom_check
+	if(desc)
+		menu.close_button.description = "<span style='font-size: 8pt; color:[COLOR_WHITE]; text-shadow: 0 0 5px #A6A6A6; font-family: Arial; text-align:center;-dm-text-outline: 1 black; vertical-align: bottom'>[desc]</span>"
 	menu.anchor = anchor
 	menu.check_screen_border(user) //Do what's needed to make it look good near borders or on hud
 	menu.set_choices(choices, tooltips)

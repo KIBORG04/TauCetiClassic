@@ -75,7 +75,7 @@
 			for(var/action in action_icon)
 				actions[action] = image(icon = 'icons/effects/crayondecal.dmi', icon_state = action_icon[action])
 
-		var/drawtype = show_radial_menu(user, target, actions, require_near = TRUE, tooltips = TRUE)
+		var/drawtype = show_radial_menu(user, target, actions, require_near = TRUE, tooltips = TRUE, desc = "Choose the type a graffiti")
 		var/sub = ""
 		if(!drawtype)
 			return
