@@ -1832,6 +1832,7 @@
 #include "code\modules\recycling\sortingmachinery.dm"
 #include "code\modules\religion\aspect.dm"
 #include "code\modules\religion\bible_info.dm"
+#include "code\modules\religion\god_approval.dm"
 #include "code\modules\religion\holy_turf.dm"
 #include "code\modules\religion\religion.dm"
 #include "code\modules\religion\religion_sects.dm"
