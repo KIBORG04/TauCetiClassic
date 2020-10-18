@@ -1,10 +1,10 @@
 /* HUD DATUMS */
-
+#define TOTAL_TYPE_HUDS 22
 var/global/list/all_huds = list()
 
 //global HUD LIST
 //if you add new defines, then change number of assoc list
-var/global/list/huds[22]
+var/global/list/huds[TOTAL_TYPE_HUDS]
 
 /proc/init_hud_list() // proc used in global_list.dm
 	// Crooked port from TG, but he needed
@@ -144,3 +144,5 @@ var/global/list/huds[22]
 
 /mob/dead/new_player/add_click_catcher()
 	return
+
+#undef TOTAL_TYPE_HUDS

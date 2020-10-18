@@ -169,6 +169,8 @@ Please contact me on #coderbus IRC. ~Carn x
 		else
 			icon_path = S.sprite_sheets[sprite_sheet_slot]
 
+	try_create_alt_apperance(-layer, H, def_icon_path, sprite_sheet_slot, layer, bloodied_icon_state, icon_state_appendix)
+
 	var/image/I = image(icon = icon_path, icon_state = "[t_state][icon_state_appendix]", layer = layer)
 	I.color = color
 
@@ -182,6 +184,24 @@ Please contact me on #coderbus IRC. ~Carn x
 /mob/living/carbon/human
 	var/list/overlays_standing[TOTAL_LAYERS]
 	var/list/overlays_damage[TOTAL_LIMB_LAYERS]
+	// Here are all the images that are not compiled into a single human overlay. Then alternate_appearance will be applied to the image.
+	var/list/alt_apperance_images[TOTAL_LAYERS]
+	var/list/standing_images[TOTAL_LAYERS]
+
+/obj/item/proc/try_create_alt_apperance(cache_index, mob/living/carbon/human/H, def_icon_path, sprite_sheet_slot, layer, bloodied_icon_state = null, icon_state_appendix = null)
+	if(!alternate_appearances)
+		return
+	
+	var/alt_images = list()
+	for(var/key in alternate_appearances)
+		var/datum/atom_hud/alternate_appearance/AA = alternate_appearances[key]
+		if(AA.alternate_obj || istype(AA.alternate_obj, /obj/item))
+			var/obj/item/alternate_obj = AA.alternate_obj
+			var/image/I = alternate_obj.get_standing_overlay(H, def_icon_path, sprite_sheet_slot, layer, bloodied_icon_state, icon_state_appendix)
+			I.loc = H
+			alt_images += I
+
+	H.alt_apperance_images[cache_index] = alt_images
 
 /mob/living/carbon/human/proc/apply_overlay(cache_index)
 	var/image/I = overlays_standing[cache_index]
@@ -531,7 +551,6 @@ Please contact me on #coderbus IRC. ~Carn x
 		overlays_standing[GLASSES_LAYER] = standing
 
 	apply_overlay(GLASSES_LAYER)
-
 
 /mob/living/carbon/human/update_inv_ears()
 	remove_overlay(EARS_LAYER)

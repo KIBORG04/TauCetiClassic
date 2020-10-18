@@ -15,6 +15,7 @@ var/global/list/active_alternate_appearances = list()
 		return
 	var/list/arguments = args.Copy(2)
 	new type(arglist(arguments))
+
 /**
   * Allows you to add an alternative sprite to the object in the form "appearance_key" = "image"
   *
@@ -22,7 +23,7 @@ var/global/list/active_alternate_appearances = list()
 /datum/atom_hud/alternate_appearance
 	var/appearance_key
 	var/transfer_overlays = FALSE
-	var/atom/alternate_type
+	var/atom/alternate_obj
 
 /datum/atom_hud/alternate_appearance/New(key)
 	..()
@@ -71,10 +72,13 @@ var/global/list/active_alternate_appearances = list()
   * * loc - not an important argument if you pass another image here
   *
 */
-/datum/atom_hud/alternate_appearance/basic/New(key, image/I, atom/_alternate_type, loc, options = AA_TARGET_SEE_APPEARANCE)
+
+/datum/atom_hud/alternate_appearance/basic/New(key, image/I, alternate_type, loc, options = AA_TARGET_SEE_APPEARANCE)
 	..()
 	transfer_overlays = options & AA_MATCH_TARGET_OVERLAYS
-	alternate_type = _alternate_type
+
+	alternate_obj = new alternate_type
+
 	hud_icons = list(appearance_key)
 
 	if(I)
@@ -82,7 +86,7 @@ var/global/list/active_alternate_appearances = list()
 		target = I.loc
 	else
 		target = loc
-		theImage = image(initial(alternate_type.icon), target, initial(alternate_type.icon_state))
+		theImage = image(alternate_obj.icon, target, alternate_obj.icon_state)
 		//This is necessary so that sprites are not layered
 		theImage.override = TRUE
 
