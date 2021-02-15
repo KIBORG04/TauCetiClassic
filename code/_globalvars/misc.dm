@@ -101,3 +101,5 @@ var/global/datum/religion/chaplain/chaplain_religion
 
 var/global/timezoneOffset = 0       // The difference betwen midnight (of the host computer) and 0 world.ticks.
 var/global/gametime_offset = 12 HOURS //Deciseconds to add to world.time for station time.
+
+var/global/internal_tick_usage = 0.2 * world.tick_lag

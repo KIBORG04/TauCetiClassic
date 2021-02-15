@@ -14,3 +14,6 @@
 #define DS2TICKS(DS) (DS/world.tick_lag)
 
 #define TICKS2DS(T) (T TICKS)
+
+/// internal_tick_usage is updated every tick by extools
+#define MAPTICK_LAST_INTERNAL_TICK_USAGE ((global.internal_tick_usage / world.tick_lag) * 100)
