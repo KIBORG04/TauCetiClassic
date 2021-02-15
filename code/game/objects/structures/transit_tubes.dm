@@ -315,7 +315,8 @@
 		last_delay = current_tube.enter_delay(src, next_dir)
 		sleep(last_delay)
 		set_dir(next_dir)
-		loc = next_loc // When moving from one tube to another, skip collision and such.
+		set_glide_size(DELAY_TO_GLIDE_SIZE(last_delay + exit_delay))
+		forceMove(next_loc) // When moving from one tube to another, skip collision and such.
 		density = current_tube.density
 
 		if(current_tube && current_tube.should_stop_pod(src, next_dir))

@@ -210,22 +210,23 @@
 			to_chat(src, "<span class='notice'>You're pinned to a wall by [mob.pinned[1]]!</span>")
 			return 0
 
+		var/add_delay = 0
 		move_delay = world.time//set move delay
 		mob.last_move_intent = world.time + 10
 		switch(mob.m_intent)
 			if("run")
 				if(mob.drowsyness > 0)
-					move_delay += 6
-				move_delay += 1+config.run_speed
+					add_delay += 6
+				add_delay += 1+config.run_speed
 			if("walk")
-				move_delay += 2.5+config.walk_speed
-		move_delay += mob.movement_delay()
+				add_delay += 2.5+config.walk_speed
+		add_delay += mob.movement_delay()
 
 		if(mob.pulledby || mob.buckled) // Wheelchair driving!
 			if(istype(mob.loc, /turf/space))
 				return // No wheelchair driving in space
 			if(istype(mob.pulledby, /obj/structure/stool/bed/chair/wheelchair))
-				return mob.pulledby.relaymove(mob, direct)
+				return mob.pulledby.relaymove(mob, direct, move_delay + add_delay)
 			else if(istype(mob.buckled, /obj/structure/stool/bed/chair/wheelchair))
 				if(ishuman(mob.buckled))
 					var/mob/living/carbon/human/driver = mob.buckled
@@ -233,8 +234,11 @@
 					var/obj/item/organ/external/r_hand = driver.bodyparts_by_name[BP_R_ARM]
 					if((!l_hand || (l_hand.is_stump)) && (!r_hand || (r_hand.is_stump)))
 						return // No hands to drive your chair? Tough luck!
-				move_delay += 2
-				return mob.buckled.relaymove(mob,direct)
+				add_delay += 2
+				return mob.buckled.relaymove(mob, direct, move_delay + add_delay)
+
+		move_delay += add_delay
+		mob.set_glide_size(DELAY_TO_GLIDE_SIZE(move_delay)) // set it now in case of pulled objects
 
 		//We are now going to move
 		moving = 1
@@ -258,6 +262,9 @@
 								if ((diag - 1) & diag)
 								else
 									diag = null
+								// Uncomment when you add diagonal deceleration
+								// add_delay += diag_delay
+								// mob.set_glide_size(DELAY_TO_GLIDE_SIZE(add_delay))
 								if ((get_dist(mob, M) > 1 || diag))
 									step(M, get_dir(M.loc, T))
 				else
@@ -468,15 +475,15 @@
 		return
 	if (A == loc && pulling.density)
 		return
-	if (!Process_Spacemove(get_dir(pulling.loc, A)))
+	var/move_dir = get_dir(pulling.loc, A)
+	if (!Process_Spacemove(move_dir))
 		return
 	if (ismob(pulling))
 		var/mob/M = pulling
 		var/atom/movable/t = M.pulling
 		M.stop_pulling()
-		step(pulling, get_dir(pulling.loc, A))
+		pulling.Move(get_step(pulling.loc, move_dir), move_dir, glide_size)
 		if(M && t)
 			M.start_pulling(t)
 	else
-		step(pulling, get_dir(pulling.loc, A))
-	return
+		pulling.Move(get_step(pulling.loc, move_dir), move_dir, glide_size)

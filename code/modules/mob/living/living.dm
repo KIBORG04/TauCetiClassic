@@ -160,7 +160,8 @@
 //					return
 		if(pulling == AM)
 			stop_pulling()
-		step(AM, t)
+		if(AM.Move(get_step(AM.loc, t), t, glide_size))
+			Move(get_step(loc, t), t)
 		now_pushing = 0
 
 //mob verbs are a lot faster than object verbs
@@ -624,10 +625,10 @@
 
 	return
 
-/mob/living/Move(NewLoc, Dir = 0, step_x = 0, step_y = 0)
+/mob/living/Move(NewLoc, Dir = 0, step_x = 0, step_y = 0, glide_size_override)
 	if (buckled && buckled.loc != NewLoc)
 		if (!buckled.anchored)
-			return buckled.Move(NewLoc, Dir)
+			return buckled.Move(NewLoc, Dir, glide_size)
 		else
 			return FALSE
 
@@ -698,15 +699,20 @@
 											H.vessel.remove_reagent("blood",1)
 
 
-						pulling.Move(T, get_dir(pulling, T))
+						pulling.Move(T, get_dir(pulling, T), glide_size)
 						if(M && AM)
 							M.start_pulling(AM)
 				else
 					if (pulling)
-						pulling.Move(T, get_dir(pulling, T))
+						pulling.Move(T, get_dir(pulling, T), glide_size)
 	else
 		stop_pulling()
 		. = ..()
+
+	//glide_size strangely enough can change mid movement animation and update correctly while the animation is playing
+	//This means that if you don't override it late like this, it will just be set back by the movement update that's called when you move turfs.
+	if(glide_size_override)
+		set_glide_size(glide_size_override)
 
 	if (s_active && !( s_active in contents ) && get_turf(s_active) != get_turf(src))	//check !( s_active in contents ) first so we hopefully don't have to call get_turf() so much.
 		s_active.close(src)

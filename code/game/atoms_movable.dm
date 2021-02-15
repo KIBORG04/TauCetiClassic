@@ -1,6 +1,6 @@
 /atom/movable
 	layer = 3
-	appearance_flags = TILE_BOUND|PIXEL_SCALE
+	appearance_flags = TILE_BOUND|PIXEL_SCALE|LONG_GLIDE
 	var/last_move = null
 	var/anchored = 0
 	var/move_speed = 10
@@ -53,7 +53,13 @@
 /atom/movable/Crossed(atom/movable/AM)
 	SEND_SIGNAL(src, COMSIG_MOVABLE_CROSSED, AM)
 
-/atom/movable/Move(NewLoc, Dir = 0, step_x = 0, step_y = 0)
+/atom/movable/proc/set_glide_size(target = 8)
+	SEND_SIGNAL(src, COMSIG_MOVABLE_UPDATE_GLIDE_SIZE, target)
+	glide_size = target
+
+	buckled_mob.set_glide_size(target)
+
+/atom/movable/Move(NewLoc, Dir = 0, step_x = 0, step_y = 0, glide_size_override = 0)
 	if(!loc || !NewLoc || freeze_movement)
 		return FALSE
 
@@ -62,6 +68,9 @@
 
 	var/atom/oldloc = loc
 	var/old_dir = dir
+	//Early override for some cases like diagonal movement
+	if(glide_size_override)
+		set_glide_size(glide_size_override)
 
 	if(loc != NewLoc)
 		if (!(Dir & (Dir - 1))) //Cardinal move
@@ -97,9 +106,14 @@
 	src.move_speed = world.time - src.l_move_time
 	src.l_move_time = world.time
 
+	//glide_size strangely enough can change mid movement animation and update correctly while the animation is playing
+	//This means that if you don't override it late like this, it will just be set back by the movement update that's called when you move turfs.
+	if(glide_size_override)
+		set_glide_size(glide_size_override)
+
 	last_move = Dir
 
-	if(. && buckled_mob && !handle_buckled_mob_movement(loc,Dir)) //movement failed due to buckled mob
+	if(. && buckled_mob && !handle_buckled_mob_movement(loc,Dir, glide_size_override)) //movement failed due to buckled mob
 		. = 0
 
 	if(dir != old_dir)
@@ -346,14 +360,14 @@
 /atom/movable/proc/handle_rotation()
 	return
 
-/atom/movable/proc/handle_buckled_mob_movement(newloc,direct)
-	if(!buckled_mob.Move(newloc, direct))
+/atom/movable/proc/handle_buckled_mob_movement(newloc, direct, glide_size_override)
+	if(!buckled_mob.Move(newloc, direct, null, null, glide_size_override))
 		loc = buckled_mob.loc
 		last_move = buckled_mob.last_move
 		inertia_dir = last_move
 		buckled_mob.inertia_dir = last_move
-		return 0
-	return 1
+		return FALSE
+	return TRUE
 
 /atom/movable/CanPass(atom/movable/mover, turf/target, height=1.5)
 	if(buckled_mob == mover)

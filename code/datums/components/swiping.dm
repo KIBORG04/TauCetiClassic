@@ -13,7 +13,7 @@
 /obj/effect/effect/weapon_sweep/atom_init(mapload, obj/item/weapon/sweep_item, list/dirs_to_move, sweep_delay)
 	. = ..()
 	name = "sweeping [sweep_item]"
-	glide_size = DELAY2GLIDESIZE(sweep_delay)
+	set_glide_size(DELAY_TO_GLIDE_SIZE(sweep_delay))
 
 	appearance = sweep_item.appearance
 

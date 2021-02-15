@@ -56,6 +56,7 @@
 	SEND_SIGNAL(src, COMSIG_MOVABLE_BUCKLE, M)
 
 	M.throw_alert("buckled", /obj/screen/alert/buckled, new_master = src)
+	M.set_glide_size(glide_size)
 	correct_pixel_shift(M)
 	M.update_canmove()
 	return TRUE
@@ -67,6 +68,7 @@
 		buckled_mob.anchored = initial(buckled_mob.anchored)
 		buckled_mob.update_canmove()
 		buckled_mob.clear_alert("buckled")
+		buckled_mob.set_glide_size(DELAY_TO_GLIDE_SIZE(buckled_mob.move_speed))
 		correct_pixel_shift(buckled_mob)
 		SEND_SIGNAL(src, COMSIG_MOVABLE_UNBUCKLE, buckled_mob)
 		buckled_mob = null

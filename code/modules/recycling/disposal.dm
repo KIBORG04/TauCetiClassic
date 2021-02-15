@@ -565,6 +565,7 @@
 // movement process, persists while holder is moving through pipes
 /obj/structure/disposalholder/proc/move()
 	var/obj/structure/disposalpipe/last
+	var/ticks = 1
 	while(active)
 		sleep(1)		// was 1
 		if(!loc) return // check if we got GC'd
@@ -589,6 +590,7 @@
 		sleep(1)		// was 1
 		var/obj/structure/disposalpipe/curr = loc
 		last = curr
+		set_glide_size(DELAY_TO_GLIDE_SIZE(ticks * world.tick_lag))
 		if(curr)
 			curr = curr.transfer(src)
 
@@ -597,7 +599,7 @@
 		if(!curr)
 			last.expel(src, loc, dir)
 
-		//
+		ticks = stoplag()
 		if(!(count--))
 			active = 0
 	return

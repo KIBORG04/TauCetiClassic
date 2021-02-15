@@ -19,6 +19,7 @@
 	Check()
 	lock = _lock
 
+	RegisterSignal(orbiter, COMSIG_MOVABLE_UPDATE_GLIDE_SIZE, .proc/orbiter_glide_size_update)
 
 
 //do not qdel directly, use stop_orbit on the orbiter. (This way the orbiter can bind to the orbit stopping)
@@ -56,6 +57,8 @@
 	orbiter.update_parallax_contents()
 	lastloc = orbiter.loc
 
+/datum/orbit/proc/orbiter_glide_size_update(datum/source, target)
+	orbiter.glide_size = target
 
 /atom/movable/var/datum/orbit/orbiting = null
 /atom/var/list/orbiters = null

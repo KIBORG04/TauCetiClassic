@@ -314,9 +314,11 @@
 	var/move_result = 0
 	if(hasInternalDamage(MECHA_INT_CONTROL_LOST))
 		move_result = mechsteprand()
+		set_glide_size(DELAY_TO_GLIDE_SIZE(step_in))
 	else if(src.dir != direction && !strafe)
 		move_result = mechturn(direction)
 	else
+		set_glide_size(DELAY_TO_GLIDE_SIZE(step_in))
 		move_result	= mechstep(direction)
 	if(move_result)
 		can_move = 0

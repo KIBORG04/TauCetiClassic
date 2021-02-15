@@ -46,7 +46,7 @@
 	else
 		to_chat(usr, "<span class='notice'>You turn the brake off.</span>")
 
-/obj/structure/stool/bed/chair/wheelchair/relaymove(mob/user, direction)
+/obj/structure/stool/bed/chair/wheelchair/relaymove(mob/user, direction, move_delay)
 	if(brake)
 		to_chat(user, "<span class='red'>You cannot drive while brake is on.</span>")
 		return
@@ -77,17 +77,20 @@
 	// Let's roll
 	driving = 1
 	var/turf/T = null
+	buckled_mob.set_glide_size(DELAY_TO_GLIDE_SIZE(move_delay))
 	//--1---Move occupant---1--//
 	if(buckled_mob)
 		buckled_mob.buckled = null
 		step(buckled_mob, direction)
 		buckled_mob.buckled = src
 	//--2----Move driver----2--//
+	pulling.set_glide_size(DELAY_TO_GLIDE_SIZE(move_delay))
 	if(pulling)
 		T = pulling.loc
 		if(get_dist(src, pulling) >= 1)
 			step(pulling, get_dir(pulling.loc, src.loc))
 	//--3--Move wheelchair--3--//
+	set_glide_size(DELAY_TO_GLIDE_SIZE(move_delay))
 	step(src, direction)
 	if(buckled_mob) // Make sure it stays beneath the occupant
 		Move(buckled_mob.loc)
@@ -106,7 +109,7 @@
 		create_track()
 	driving = 0
 
-/obj/structure/stool/bed/chair/wheelchair/Move(NewLoc, Dir = 0, step_x = 0, step_y = 0)
+/obj/structure/stool/bed/chair/wheelchair/Move(NewLoc, Dir = 0, step_x = 0, step_y = 0, glide_size_override)
 	if(brake)
 		return FALSE
 	. = ..()
@@ -114,7 +117,7 @@
 		var/mob/living/occupant = buckled_mob
 		if(!driving)
 			occupant.buckled = null
-			occupant.Move(src.loc)
+			occupant.Move(src.loc, null, null, null, glide_size_override)
 			occupant.buckled = src
 			if (occupant && (src.loc != occupant.loc))
 				if (propelled)

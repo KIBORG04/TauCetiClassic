@@ -217,8 +217,6 @@
 #define MIN_IMPREGNATION_TIME 200
 #define MAX_IMPREGNATION_TIME 250
 
-#define DELAY2GLIDESIZE(delay) (world.icon_size / max(CEIL(delay / world.tick_lag), 1))
-
 #define PLASMAGUN_OVERCHARGE 30100
 
 //! ## Overlays subsystem
