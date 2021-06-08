@@ -84,9 +84,10 @@
 #define shuttle_time_in_station 1800 // 3 minutes in the station
 #define shuttle_time_to_arrive 6000 // 10 minutes to arrive
 
-#define EVENT_LEVEL_MUNDANE 1
-#define EVENT_LEVEL_MODERATE 2
-#define EVENT_LEVEL_MAJOR 3
+#define EVENT_LEVEL_ROUNDSTART 1
+#define EVENT_LEVEL_MUNDANE 2
+#define EVENT_LEVEL_MODERATE 3
+#define EVENT_LEVEL_MAJOR 4
 
 //defines
 #define RESIZE_DEFAULT_SIZE 1
@@ -148,6 +149,10 @@
 #define MANIFEST_ERROR_CONTENTS		2
 #define MANIFEST_ERROR_ITEM			4
 
+//Dummy mob reserve slots
+#define DUMMY_HUMAN_SLOT_PREFERENCES "dummy_preference_preview"
+#define DUMMY_HUMAN_SLOT_BARBER "dummy_barbet_preview"
+#define DUMMY_HUMAN_SLOT_MANIFEST "dummy_manifest_generation"
 
 //teleport checks
 #define TELE_CHECK_NONE 0
@@ -178,6 +183,8 @@
 #define PROJECTILE_ALL_OK 3
 
 #define COORD(A) "([A.x],[A.y],[A.z])"
+
+#define RUNE_WORDS list("travel", "blood", "join", "hell", "destroy", "technology", "self", "see", "other", "hide")
 
 //Error handler defines
 #define ERROR_USEFUL_LEN 2
@@ -217,7 +224,19 @@
 #define MIN_IMPREGNATION_TIME 200
 #define MAX_IMPREGNATION_TIME 250
 
+#define DELAY2GLIDESIZE(delay) (world.icon_size / max(CEIL(delay / world.tick_lag), 1))
+
 #define PLASMAGUN_OVERCHARGE 30100
+
+#define VAR_SWAP(A, B)\
+	var/temp = A;\
+	A = B;\
+	B = temp;\
+
+#define LOC_SWAP(A, B)\
+	var/atom/temp = A.loc;\
+	A.forceMove(B.loc);\
+	B.forceMove(temp);\
 
 //! ## Overlays subsystem
 
@@ -242,3 +261,14 @@
 	A.flags_2 &= ~OVERLAY_QUEUED_2;\
 	if(isturf(A)){SSdemo.mark_turf(A);}\
 	if(isobj(A) || ismob(A)){SSdemo.mark_dirty(A);}\
+
+///Access Region Codes///
+#define REGION_ALL			0
+#define REGION_GENERAL		1
+#define REGION_SECURITY		2
+#define REGION_MEDBAY		3
+#define REGION_RESEARCH		4
+#define REGION_ENGINEERING	5
+#define REGION_SUPPLY		6
+#define REGION_COMMAND		7
+#define REGION_CENTCOMM		8

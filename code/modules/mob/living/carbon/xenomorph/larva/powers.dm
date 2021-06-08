@@ -1,25 +1,3 @@
-
-/mob/living/carbon/xenomorph/larva/verb/hide()
-	set name = "Спрятаться"
-	set desc = "Позволяет прятаться под столами и другими предметами. Включается и отключается."
-	set category = "Alien"
-
-	if(incapacitated())
-		return
-
-	if (layer != TURF_LAYER+0.2)
-		layer = TURF_LAYER+0.2
-		to_chat(src, text("<span class='notice'>Сейчас вы прячетесь.</span>"))
-		for(var/mob/O in oviewers(src, null))
-			if ((O.client && !( O.blinded )))
-				to_chat(O, text("[] исчезает.", src))
-	else
-		layer = MOB_LAYER
-		to_chat(src, text("<span class='notice'>Вы больше не прячетесь.</span>"))
-		for(var/mob/O in oviewers(src, null))
-			if ((O.client && !( O.blinded )))
-				to_chat(O, text("[] появляется.", src))
-
 /mob/living/carbon/xenomorph/larva/verb/evolve()
 	set name = "Эволюция"
 	set desc = "Превратиться во взрослого ксеноморфа."
@@ -49,12 +27,12 @@
 		var/evolve_now = null
 		var/alien_caste = null
 		if(!queen && !drone)
-			evolve_now = alert(src, "Сейчас вы можете превратиться только в трутня, так как среди ксеноморфов нет в живых ни одного трутня либо королевы.", "Улей в опасности!", "Быть Трутнем", "Отмена")
+			evolve_now = tgui_alert(src, "Сейчас вы можете превратиться только в трутня, так как среди ксеноморфов нет в живых ни одного трутня либо королевы.", "Улей в опасности!", list("Быть Трутнем", "Отмена"))
 			if(evolve_now == "Отмена")
 				return
 			alien_caste = "Трутень"
 		else
-			evolve_now = alert(src, "Вы уверены что хотите сейчас эволюционировать?",,"Да","Нет")
+			evolve_now = tgui_alert(src, "Вы уверены что хотите сейчас эволюционировать?",, list("Да","Нет"))
 			if(evolve_now == "Нет")
 				return
 			to_chat(src, {"<br><span class='notice'><b>Вы превращаетесь во взрослого ксеноморфа! Пора выбрать одну из трех каст:</b></span>
@@ -62,7 +40,7 @@
 	<B>Стражи</B> <span class='notice'>- защитники улья, и они смертельно опасны как вблизи, так и на расстоянии. Менее подвижны, чем охотники, но имеют большие запасы плазмы.</span>
 	<B>Трутни</B> <span class='notice'>- рабочий класс, они обустраивают улей, быстро производят плазму и имеют самый большой её запас. Только трутни могут стать королевой ксеноморфов.</span><br>"})
 
-			alien_caste = alert(src, "Пожалуйста, выберите, к какой касте ксеноморфов вы хотите принадлежать.", "Выберите касту", "Охотник", "Страж", "Трутень")
+			alien_caste = tgui_alert(src, "Пожалуйста, выберите, к какой касте ксеноморфов вы хотите принадлежать.", "Выберите касту", list("Охотник", "Страж", "Трутень", "Отмена"))
 			if(alien_caste == "Отмена")
 				return
 
@@ -82,7 +60,7 @@
 			CRASH("new_xeno = null. Chosen caste: [alien_caste].")
 		if(mind)
 			mind.transfer_to(new_xeno)
-			new_xeno.mind.add_antag_hud(ANTAG_HUD_ALIEN, "hudalien", new_xeno)
+			new_xeno.mind.name = new_xeno.real_name
 			qdel(src)
 		return
 	else

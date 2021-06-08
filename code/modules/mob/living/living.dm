@@ -610,18 +610,21 @@
 	if(needs_update)
 		update_mutations()
 
+/mob/living/drop_item(atom/Target)
+	if(!get_active_hand() && !drop_combo_element())
+		to_chat(src, "<span class='warning'>You have nothing to drop in your hand!</span>")
+		return
+	return ..()
+
 /mob/living/proc/Examine_OOC()
 	set name = "Examine Meta-Info (OOC)"
 	set category = "OOC"
 	set src in view()
 
-	if(config.allow_Metadata)
-		if(client)
-			to_chat(usr, "[src]'s Metainfo:<br>[client.prefs.metadata]")
-		else
-			to_chat(usr, "[src] does not have any stored infomation!")
+	if(client)
+		to_chat(usr, "[src]'s Metainfo:<br>[client.prefs.metadata]")
 	else
-		to_chat(usr, "OOC Metadata is not supported by this server!")
+		to_chat(usr, "[src] does not have any stored infomation!")
 
 	return
 
@@ -726,7 +729,7 @@
 	var/trail_type = M.getTrail()
 	for(var/obj/effect/decal/cleanable/blood/trail_holder/C in M.loc) //checks for blood splatter already on the floor
 		blood_exists = 1
-	if (istype(M.loc, /turf/simulated) && trail_type != null)
+	if (isturf(M.loc) && trail_type != null)
 		var/newdir = get_dir(T, M.loc)
 		if(newdir != M.dir)
 			newdir = newdir | M.dir
@@ -871,7 +874,7 @@
 			if (istype(C.buckled,/obj/structure/stool/bed/nest))
 				C.buckled.user_unbuckle_mob(C)
 				return
-			if( C.handcuffed )
+			if(C.handcuffed || istype(C.buckled, /obj/machinery/optable/torture_table))
 				C.next_move = world.time + 100
 				C.last_special = world.time + 100
 				C.visible_message("<span class='danger'>[usr] attempts to unbuckle themself!</span>", self_message = "<span class='rose'>You attempt to unbuckle yourself. (This will take around 2 minutes and you need to stand still)</span>")
@@ -1122,16 +1125,6 @@
 			I.pixel_z = 16
 			animate(I, pixel_z = 0, alpha = 125, time = 3)
 	return viewing
-
-/mob/living/Stat()
-	..()
-	if(statpanel("Status"))
-		if(SSticker.mode && SSticker.mode.config_tag == "gang")
-			var/datum/game_mode/gang/mode = SSticker.mode
-			if(isnum(mode.A_timer))
-				stat(null, "[gang_name("A")] Gang Takeover: [max(mode.A_timer, 0)]")
-			if(isnum(mode.B_timer))
-				stat(null, "[gang_name("B")] Gang Takeover: [max(mode.B_timer, 0)]")
 
 /mob/living/update_gravity(has_gravity)
 	if(!SSticker)

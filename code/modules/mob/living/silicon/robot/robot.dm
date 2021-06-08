@@ -7,7 +7,7 @@
 	icon_state = "robot"
 	maxHealth = 200
 	health = 200
-	hud_possible = list(ANTAG_HUD, DIAG_STAT_HUD, DIAG_HUD, DIAG_BATT_HUD, HEALTH_HUD, STATUS_HUD, ID_HUD, IMPTRACK_HUD, IMPLOYAL_HUD, IMPCHEM_HUD, IMPMINDS_HUD, WANTED_HUD)
+	hud_possible = list(ANTAG_HUD, HOLY_HUD, DIAG_STAT_HUD, DIAG_HUD, DIAG_BATT_HUD, HEALTH_HUD, STATUS_HUD, ID_HUD, IMPTRACK_HUD, IMPLOYAL_HUD, IMPCHEM_HUD, IMPMINDS_HUD, WANTED_HUD)
 
 	typing_indicator_type = "robot"
 
@@ -77,7 +77,7 @@
 	// Radial menu for choose module
 	var/static/list/choose_module
 
-/mob/living/silicon/robot/atom_init(mapload, name_prefix = "Default", laws_type = /datum/ai_laws/nanotrasen, ai_link = TRUE)
+/mob/living/silicon/robot/atom_init(mapload, name_prefix = "Default", laws_type = /datum/ai_laws/nanotrasen, ai_link = TRUE, datum/religion/R)
 	spark_system = new /datum/effect/effect/system/spark_spread()
 	spark_system.set_up(5, 0, src)
 	spark_system.attach(src)
@@ -92,7 +92,7 @@
 	updatename(name_prefix)
 	updateicon()
 
-	init(laws_type, ai_link)
+	init(laws_type, ai_link, R)
 
 	radio = new /obj/item/device/radio/borg(src)
 	if(!scrambledcodes && !camera)
@@ -123,11 +123,16 @@
 
 	diag_hud_set_borgcell()
 
-/mob/living/silicon/robot/proc/init(laws_type, ai_link)
+/mob/living/silicon/robot/proc/set_ai_link(link)
+	if (connected_ai != link)
+		connected_ai = link
+		update_manifest()
+
+/mob/living/silicon/robot/proc/init(laws_type, ai_link, datum/religion/R)
 	aiCamera = new/obj/item/device/camera/siliconcam/robot_camera(src)
-	laws = new laws_type()
+	laws = new laws_type(R)
 	if(ai_link)
-		connected_ai = select_active_ai_with_fewest_borgs()
+		set_ai_link(select_active_ai_with_fewest_borgs())
 		if(connected_ai)
 			connected_ai.connected_robots += src
 			lawsync()
@@ -136,7 +141,7 @@
 	else
 		lawupdate = 0
 
-	playsound(src, 'sound/effects/robot_initialization.ogg', VOL_EFFECTS_MASTER, 100, FALSE)
+	playsound(src, 'sound/voice/liveagain.ogg', VOL_EFFECTS_MASTER)
 
 // setup the PDA and its name
 /mob/living/silicon/robot/proc/setup_PDA()
@@ -162,8 +167,7 @@
 		var/list/modules = list(
 				"Standard" = "robot_old",
 				"Engineering" = "Engineering",
-				"Surgeon" = "medicalrobot",
-				"Crisis" = "Medbot",
+				"Medical" = "medicalrobot",
 				"Miner" = "Miner_old",
 				"Janitor" = "JanBot2",
 				"Service" = "Service",
@@ -232,8 +236,8 @@
 			module_sprites["Kodiak"] = "kodiak-miner"
 			give_hud(DATA_HUD_MINER)
 
-		if("Crisis")
-			module = new /obj/item/weapon/robot_module/crisis(src)
+		if("Medical")
+			module = new /obj/item/weapon/robot_module/medical(src)
 			module.channels = list("Medical" = 1)
 			if(camera && ("Robots" in camera.network))
 				camera.add_network("Medical")
@@ -241,19 +245,8 @@
 			module_sprites["Standard"] = "surgeon"
 			module_sprites["Advanced Droid"] = "droid-medical"
 			module_sprites["Needles"] = "medicalrobot"
-			module_sprites["Drone"] = "drone-medical"
-			module_sprites["Acheron"] = "mechoid-Medical"
-
-		if("Surgeon")
-			module = new /obj/item/weapon/robot_module/surgeon(src)
-			module.channels = list("Medical" = 1)
-			if(camera && ("Robots" in camera.network))
-				camera.add_network("Medical")
-			module_sprites["Basic"] = "Medbot"
-			module_sprites["Standard"] = "surgeon"
-			module_sprites["Advanced Droid"] = "droid-medical"
-			module_sprites["Needles"] = "medicalrobot"
-			module_sprites["Drone"] = "drone-surgery"
+			module_sprites["Drone Red"] = "drone-surgery"
+			module_sprites["Drone Green"] = "drone-medical"
 			module_sprites["Acheron"] = "mechoid-Medical"
 
 		if("Security")
@@ -303,7 +296,7 @@
 	feedback_inc("cyborg_[lowertext(modtype)]",1)
 	updatename()
 
-	if(modtype == "Crisis" || modtype == "Surgeon" || modtype == "Security" || modtype == "Combat" || modtype == "Syndicate")
+	if(modtype == "Medical" || modtype == "Security" || modtype == "Combat" || modtype == "Syndicate")
 		status_flags &= ~CANPUSH
 
 	// Radial menu for choose icon_state
@@ -317,7 +310,6 @@
 	var/new_icon_state = show_radial_menu(usr, usr, choose_icon, radius = 50, tooltips = TRUE)
 	if(new_icon_state)
 		icon_state = module_sprites[new_icon_state]
-		playsound(src, 'sound/effects/robot_reset_module.ogg', VOL_EFFECTS_MASTER, 100, FALSE)
 
 	radio.config(module.channels)
 
@@ -348,6 +340,7 @@
 
 	// if we've changed our name, we also need to update the display name for our PDA
 	setup_PDA()
+	update_manifest()
 
 	//We also need to update name of internal camera.
 	if (camera)
@@ -473,6 +466,9 @@
 			if(current_jetpack) // if you have a jetpack, show the internal tank pressure
 				stat("Internal Atmosphere Info: [current_jetpack.name]")
 				stat("Tank Pressure: [current_jetpack.air_contents.return_pressure()]")
+		if(locate(/obj/item/device/gps/cyborg))
+			var/turf/T = get_turf(src)
+			stat(null, "GPS: [COORD(T)]")
 
 		stat(null, text("Lights: [lights_on ? "ON" : "OFF"]"))
 
@@ -746,7 +742,7 @@
 				throw_alert("hacked", /obj/screen/alert/hacked)
 				emagged = 1
 				lawupdate = 0
-				connected_ai = null
+				set_ai_link(null)
 				to_chat(user, "You emag [src]'s interface.")
 				message_admins("[key_name_admin(user)] emagged cyborg [key_name_admin(src)].  Laws overridden. [ADMIN_JMP(user)]")
 				log_game("[key_name(user)] emagged cyborg [key_name(src)].  Laws overridden.")
@@ -1067,7 +1063,7 @@
 
 /mob/living/silicon/robot/proc/UnlinkSelf()
 	if (src.connected_ai)
-		src.connected_ai = null
+		src.set_ai_link(null)
 	lawupdate = 0
 	lockcharge = 0
 	canmove = 1
@@ -1076,6 +1072,7 @@
 	if(src.camera)
 		src.camera.clear_all_networks()
 		cameranet.removeCamera(src.camera)
+	update_manifest()
 
 
 /mob/living/silicon/robot/proc/ResetSecurityCodes()

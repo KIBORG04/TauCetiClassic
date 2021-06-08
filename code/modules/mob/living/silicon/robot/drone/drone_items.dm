@@ -50,6 +50,14 @@
 /obj/item/weapon/gripper/proc/is_hand(datum/source, atom/T, mob/user, params)
 	return TRUE
 
+/obj/item/weapon/gripper/proc/clear_wrapped()
+	wrapped = null
+
+/obj/item/weapon/gripper/proc/wrap(obj/item/I)
+	wrapped = I
+	I.forceMove(src)
+	RegisterSignal(I, list(COMSIG_PARENT_PREQDELETED), .proc/clear_wrapped)
+
 /obj/item/weapon/gripper/proc/attack_as_hand(datum/source, atom/T, mob/user, params)
 	if(wrapped)
 		return
@@ -67,11 +75,10 @@
 		if(A.opened)
 			if(A.cell)
 
-				wrapped = A.cell
+				wrap(A.cell)
 
 				A.cell.add_fingerprint(user)
 				A.cell.updateicon()
-				A.cell.forceMove(src)
 				A.cell = null
 
 				A.charging = FALSE
@@ -91,6 +98,7 @@
 		I.forceMove(T)
 	else
 		I.forceMove(get_turf(user))
+	UnregisterSignal(wrapped, list(COMSIG_PARENT_PREQDELETED))
 	wrapped = null
 	return TRUE
 
@@ -110,9 +118,8 @@
 	if(grab)
 		if(user.pulling == I)
 			user.stop_pulling()
+		wrap(I)
 		to_chat(user, "You collect \the [I].")
-		I.forceMove(src)
-		wrapped = I
 		return TRUE
 
 	to_chat(user, "<span class='warning'>Your gripper cannot hold \the [I].</span>")
@@ -137,17 +144,6 @@
 		/obj/item/weapon/card/id,
 		/obj/item/weapon/book,
 		/obj/item/weapon/newspaper
-		)
-
-/obj/item/weapon/gripper/chemistry
-	name = "chemistry gripper"
-	desc = "A simple grasping tool for chemical work."
-	icon = 'icons/obj/device.dmi'
-	icon_state = "gripper"
-
-	can_hold = list(
-		/obj/item/weapon/reagent_containers/glass,
-		/obj/item/weapon/storage/pill_bottle
 		)
 
 /obj/item/weapon/gripper/service
@@ -185,6 +181,26 @@
 		/obj/item/robot_parts,
 		/obj/item/weapon/stock_parts,
 		/obj/item/device/flash
+		)
+
+/obj/item/weapon/gripper/medical
+	name = "medical gripper"
+	desc = "A holder for limbs and chemical containers."
+	icon = 'icons/obj/device.dmi'
+	icon_state = "gripper"
+
+	can_hold = list(
+		/obj/item/weapon/reagent_containers/blood,
+		/obj/item/weapon/reagent_containers/glass,
+		/obj/item/weapon/reagent_containers/pill,
+		/obj/item/weapon/storage/pill_bottle,
+		/obj/item/organ/internal,
+		/obj/item/organ/external,
+		/obj/item/brain,
+		/obj/item/robot_parts/l_arm,
+		/obj/item/robot_parts/r_arm,
+		/obj/item/robot_parts/l_leg,
+		/obj/item/robot_parts/r_leg
 		)
 
 /obj/item/weapon/gripper/examine(mob/user)

@@ -185,7 +185,7 @@
 	set category = "Object"
 	set src in usr
 
-	if (alert(usr, "Are you sure you want to empty that?", "Empty Bottle:", "Yes", "No") != "Yes")
+	if (tgui_alert(usr, "Are you sure you want to empty that?", "Empty Bottle:", list("Yes", "No")) != "Yes")
 		return
 	if(isturf(usr.loc))
 		to_chat(usr, "<span class='notice'>You empty \the [src] onto the floor.</span>")
@@ -392,6 +392,8 @@
 	. = ..()
 	reagents.add_reagent("cleaner", volume)
 
+	cleaners_list += src
+
 //pepperspray
 /obj/item/weapon/reagent_containers/spray/pepper
 	name = "pepperspray"
@@ -461,6 +463,14 @@
 /obj/item/weapon/reagent_containers/spray/plantbgone/atom_init()
 	. = ..()
 	reagents.add_reagent("plantbgone", 100)
+
+// Lube Spray
+/obj/item/weapon/reagent_containers/spray/lube
+	volume = 150
+
+/obj/item/weapon/reagent_containers/spray/lube/atom_init()
+	. = ..()
+	reagents.add_reagent("lube", 150)
 
 //Water Gun
 /obj/item/weapon/reagent_containers/spray/watergun

@@ -75,11 +75,6 @@
 				log_admin("[key_name(usr)] has spawned vox raiders.")
 				if(!src.makeVoxRaiders())
 					to_chat(usr, "<span class='warning'>Unfortunately there weren't enough candidates available.</span>")
-			if("12")
-				message_admins("[key_name(usr)] started a gang war.")
-				log_admin("[key_name(usr)] started a gang war.")
-				if(!src.makeGangsters())
-					to_chat(usr, "<span class='danger'>Unfortunatly there were not enough candidates available.</span>")
 
 	else if(href_list["dbsearchckey"] || href_list["dbsearchadmin"] || href_list["dbsearchip"] || href_list["dbsearchcid"] || href_list["dbsearchbantype"])
 		var/adminckey = href_list["dbsearchadmin"]
@@ -154,9 +149,9 @@
 			if(bancid)
 				banreason = "[banreason] (CUSTOM CID)"
 		else
-			message_admins("Ban process: A mob matching [playermob.ckey] was found at location [playermob.x], [playermob.y], [playermob.z]. Custom ip and computer id fields replaced with the ip and computer id from the located mob")
+			message_admins("Ban process: A mob matching [playermob.ckey] was found at location [COORD(playermob)]. Custom ip and computer id fields replaced with the ip and computer id from the located mob")
 
-		DB_ban_record(bantype, playermob, banduration, banreason, banjob, null, banckey, banip, bancid )
+		DB_ban_record(bantype, playermob, banduration, banreason, banjob, banckey, banip, bancid )
 
 	else if(href_list["editrights"])
 		if(!check_rights(R_PERMISSIONS))
@@ -169,7 +164,7 @@
 			return
 		switch(task)
 			if("add")
-				var/response = alert(usr, "Who do you want to add?","Message","Admin","Mentor","Cancel")
+				var/response = tgui_alert(usr, "Who do you want to add?","Message", list("Admin","Mentor","Cancel"))
 				switch(response)
 					if("Admin")
 						add_admin()
@@ -268,7 +263,7 @@
 			return
 
 		if( SSticker.mode.name == "blob" )
-			alert("You can't call the shuttle during blob!")
+			tgui_alert(usr, "You can't call the shuttle during blob!")
 			return
 
 		switch(href_list["call_shuttle"])
@@ -300,6 +295,7 @@
 							timer_maint_revoke_id = 0
 						timer_maint_revoke_id = addtimer(CALLBACK(GLOBAL_PROC, .proc/revoke_maint_all_access, FALSE), 600, TIMER_UNIQUE|TIMER_STOPPABLE)
 
+		check_antagonists()
 		href_list["secretsadmin"] = "check_antagonist"
 
 	else if(href_list["edit_shuttle_time"])
@@ -309,6 +305,8 @@
 		log_admin("[key_name(usr)] edited the Emergency Shuttle's timeleft to [SSshuttle.timeleft()]")
 		SSshuttle.announce_emer_called.play()
 		message_admins("<span class='notice'>[key_name_admin(usr)] edited the Emergency Shuttle's timeleft to [SSshuttle.timeleft()]</span>")
+
+		check_antagonists()
 		href_list["secretsadmin"] = "check_antagonist"
 
 	else if(href_list["delay_round_end"])
@@ -322,6 +320,8 @@
 			attachment_msg = "**[key_name(usr)]** [SSticker.delay_end ? "delayed the round end" : "has made the round end normally"].",
 			attachment_color = BRIDGE_COLOR_ROUNDSTAT,
 		)
+
+		check_antagonists()
 		href_list["secretsadmin"] = "check_antagonist"
 
 	else if(href_list["simplemake"])
@@ -333,12 +333,9 @@
 			return
 
 		var/delmob = 0
-		switch(alert("Delete old mob?","Message","Yes","No","Cancel"))
+		switch(tgui_alert(usr, "Delete old mob?","Message", list("Yes","No","Cancel")))
 			if("Cancel")	return
 			if("Yes")		delmob = 1
-
-		log_admin("[key_name(usr)] has used rudimentary transformation on [key_name(M)]. Transforming to [href_list["simplemake"]]; deletemob=[delmob]")
-		message_admins("[key_name_admin(usr)] has used rudimentary transformation on [key_name_admin(M)]. Transforming to [href_list["simplemake"]]; deletemob=[delmob]")
 
 		switch(href_list["simplemake"])
 			if("observer")			M.change_mob_type( /mob/dead/observer , null, null, delmob )
@@ -363,29 +360,10 @@
 			if("constructbuilder")	M.change_mob_type( /mob/living/simple_animal/construct/builder , null, null, delmob )
 			if("constructwraith")	M.change_mob_type( /mob/living/simple_animal/construct/wraith , null, null, delmob )
 			if("shade")				M.change_mob_type( /mob/living/simple_animal/shade , null, null, delmob )
-			if("meme")
-				var/mob/living/parasite/meme/newmeme = new
-				M.mind.transfer_to(newmeme)
-				newmeme.clearHUD()
+			else                    return
 
-				var/found = 0
-				for(var/mob/living/carbon/human/H in human_list) if(H.client && !H.parasites.len)
-					found = 1
-					newmeme.enter_host(H)
-
-					message_admins("[H] has become [newmeme.key]'s host")
-
-					break
-
-				// if there was no host, abort
-				if(!found)
-					newmeme.mind.transfer_to(M)
-					message_admins("Failed to find host for meme [M.key]. Aborting.")
-
-				SSticker.mode.memes += newmeme
-
-				if(delmob)
-					qdel(M)
+		log_admin("[key_name(usr)] has used rudimentary transformation on [key_name(M)]. Transforming to [href_list["simplemake"]]; deletemob=[delmob]")
+		message_admins("[key_name_admin(usr)] has used rudimentary transformation on [key_name_admin(M)]. Transforming to [href_list["simplemake"]]; deletemob=[delmob]")
 
 
 	/////////////////////////////////////new ban stuff
@@ -395,11 +373,11 @@
 		var/banfolder = href_list["unbanf"]
 		Banlist.cd = "/base/[banfolder]"
 		var/key = Banlist["key"]
-		if(alert(usr, "Are you sure you want to unban [key]?", "Confirmation", "Yes", "No") == "Yes")
+		if(tgui_alert(usr, "Are you sure you want to unban [key]?", "Confirmation", list("Yes", "No")) == "Yes")
 			if(RemoveBan(banfolder))
 				unbanpanel()
 			else
-				alert(usr, "This ban has already been lifted / does not exist.", "Error", "Ok")
+				tgui_alert(usr, "This ban has already been lifted / does not exist.", "Error")
 				unbanpanel()
 
 	else if(href_list["warn"])
@@ -423,7 +401,7 @@
 
 		var/duration
 
-		switch(alert("Temporary Ban?",,"Yes","No"))
+		switch(tgui_alert(usr,"Temporary Ban?",, list("Yes","No")))
 			if("Yes")
 				temp = 1
 				var/mins = 0
@@ -457,7 +435,7 @@
 	/////////////////////////////////////new ban stuff
 
 	else if(href_list["jobban2"])
-//		if(!check_rights(R_BAN))	return
+		if(!check_rights(R_BAN))	return
 
 		var/mob/M = locate(href_list["jobban2"])
 		if(!ismob(M))
@@ -727,20 +705,6 @@
 		else
 			jobs += "<td width='20%'><a href='?src=\ref[src];jobban3=[ROLE_ERT];jobban4=\ref[M]'>[ROLE_ERT]</a></td>"
 
-		//Meme
-		if(jobban_isbanned(M, ROLE_MEME) || isbanned_dept)
-			jobs += "<td width='20%'><a class='red' href='?src=\ref[src];jobban3=[ROLE_MEME];jobban4=\ref[M]'>[ROLE_MEME]</a></td>"
-		else
-			jobs += "<td width='20%'><a href='?src=\ref[src];jobban3=[ROLE_MEME];jobban4=\ref[M]'>[ROLE_MEME]</a></td>"
-
-		//Mutineer
-		if(jobban_isbanned(M, ROLE_MUTINEER) || isbanned_dept)
-			jobs += "<td width='20%'><a class='red' href='?src=\ref[src];jobban3=[ROLE_MUTINEER];jobban4=\ref[M]'>[ROLE_MUTINEER]</a></td>"
-		else
-			jobs += "<td width='20%'><a href='?src=\ref[src];jobban3=[ROLE_MUTINEER];jobban4=\ref[M]'>[ROLE_MUTINEER]</a></td>"
-
-		jobs += "</tr><tr align='center'>" //Breaking it up so it fits nicer on the screen every 5 entries
-
 		//Shadowling
 		if(jobban_isbanned(M, ROLE_SHADOWLING) || isbanned_dept)
 			jobs += "<td width='20%'><a class='red' href='?src=\ref[src];jobban3=[ROLE_SHADOWLING];jobban4=\ref[M]'>[ROLE_SHADOWLING]</a></td>"
@@ -752,6 +716,8 @@
 			jobs += "<td width='20%'><a class='red' href='?src=\ref[src];jobban3=[ROLE_ABDUCTOR];jobban4=\ref[M]'>[ROLE_ABDUCTOR]</a></td>"
 		else
 			jobs += "<td width='20%'><a href='?src=\ref[src];jobban3=[ROLE_ABDUCTOR];jobban4=\ref[M]'>[ROLE_ABDUCTOR]</a></td>"
+
+		jobs += "</tr><tr align='center'>" //Breaking it up so it fits nicer on the screen every 5 entries
 
 		//Ninja
 		if(jobban_isbanned(M, ROLE_NINJA) || isbanned_dept)
@@ -822,7 +788,7 @@
 
 		if(M != usr)																//we can jobban ourselves
 			if(M.client && M.client.holder && (M.client.holder.rights & R_BAN))		//they can ban too. So we can't ban them
-				alert("You cannot perform this action. You must be of a higher administrative rank!")
+				tgui_alert(usr, "You cannot perform this action. You must be of a higher administrative rank!")
 				return
 
 		if(!SSjob)
@@ -894,7 +860,7 @@
 
 		//Banning comes first
 		if(notbannedlist.len) //at least 1 unbanned job exists in joblist so we have stuff to ban.
-			switch(alert("Temporary Ban?",,"Yes","No", "Cancel"))
+			switch(tgui_alert(usr, "Temporary Ban?",, list("Yes","No", "Cancel")))
 				if("Yes")
 					if(!check_rights(R_BAN))  return
 					var/mins = input(usr,"How long (in minutes)?","Ban time",1440) as num|null
@@ -956,7 +922,7 @@
 				var/reason = jobban_isbanned(M, job)
 				if(!reason)
 					continue //skip if it isn't jobbanned anyway
-				switch(alert("Job: '[job]' Reason: '[reason]' Un-jobban?","Please Confirm","Yes","No"))
+				switch(tgui_alert(usr, "Job: '[job]' Reason: '[reason]' Un-jobban?","Please Confirm", list("Yes","No")))
 					if("Yes")
 						ban_unban_log_save("[key_name(usr)] unjobbanned [key_name(M)] from [job]")
 						log_admin("[key_name(usr)] unbanned [key_name(M)] from [job]")
@@ -1059,7 +1025,7 @@
 
 		if(M.client && M.client.holder)	return	//admins cannot be banned. Even if they could, the ban doesn't affect them anyway
 
-		switch(alert("Temporary Ban?",,"Yes","No", "Cancel"))
+		switch(tgui_alert(usr, "Temporary Ban?",, list("Yes","No", "Cancel")))
 			if("Yes")
 				var/mins = input(usr,"How long (in minutes)?","Ban time",1440) as num|null
 				if(!mins)
@@ -1089,7 +1055,7 @@
 				var/reason = sanitize(input(usr,"Reason?","reason","Griefer") as text|null)
 				if(!reason)
 					return
-				switch(alert(usr,"IP ban?",,"Yes","No","Cancel"))
+				switch(tgui_alert(usr, "IP ban?",, list("Yes","No","Cancel")))
 					if("Cancel")	return
 					if("Yes")
 						AddBan(M.ckey, M.computer_id, reason, usr.ckey, 0, 0, M.lastKnownIP)
@@ -1134,7 +1100,7 @@
 			return
 
 		if(SSticker && SSticker.mode)
-			return alert(usr, "The game has already started.", null, null, null, null)
+			return tgui_alert(usr, "The game has already started.")
 		var/dat = ""
 		for(var/mode in config.modes)
 			dat += {"<A href='?src=\ref[src];c_mode2=[mode]'>[config.mode_names[mode]]</A><br>"}
@@ -1151,9 +1117,9 @@
 			return
 
 		if(SSticker && SSticker.mode)
-			return alert(usr, "The game has already started.", null, null, null, null)
+			return tgui_alert(usr, "The game has already started.")
 		if(master_mode != "secret")
-			return alert(usr, "The game mode has to be secret!", null, null, null, null)
+			return tgui_alert(usr, "The game mode has to be secret!")
 		var/dat = {"<B>What game mode do you want to force secret to be? Use this if you want to change the game mode, but want the players to believe it's secret. This will only work if the current game mode is secret.</B><HR>"}
 		for(var/mode in config.modes)
 			dat += {"<A href='?src=\ref[src];f_secret2=[mode]'>[config.mode_names[mode]]</A><br>"}
@@ -1169,7 +1135,7 @@
 			return
 
 		if (SSticker && SSticker.mode)
-			return alert(usr, "The game has already started.", null, null, null, null)
+			return tgui_alert(usr, "The game has already started.")
 		master_mode = href_list["c_mode2"]
 		log_admin("[key_name(usr)] set the mode as [master_mode].")
 		message_admins("<span class='notice'>[key_name_admin(usr)] set the mode as [master_mode].</span>")
@@ -1183,9 +1149,9 @@
 			return
 
 		if(SSticker && SSticker.mode)
-			return alert(usr, "The game has already started.", null, null, null, null)
+			return tgui_alert(usr, "The game has already started.")
 		if(master_mode != "secret")
-			return alert(usr, "The game mode has to be secret!", null, null, null, null)
+			return tgui_alert(usr, "The game mode has to be secret!")
 		secret_force_mode = href_list["f_secret2"]
 		log_admin("[key_name(usr)] set the forced secret mode as [secret_force_mode].")
 		message_admins("<span class='notice'>[key_name_admin(usr)] set the forced secret mode as [secret_force_mode].</span>")
@@ -1234,7 +1200,7 @@
 	else if(href_list["sendtoprison"])
 		if(!check_rights(R_ADMIN))	return
 
-		if(alert(usr, "Send to admin prison for the round?", "Message", "Yes", "No") != "Yes")
+		if(tgui_alert(usr, "Send to admin prison for the round?", "Message", list("Yes", "No")) != "Yes")
 			return
 
 		var/mob/M = locate(href_list["sendtoprison"])
@@ -1276,7 +1242,7 @@
 		if(!check_rights(R_FUN))
 			return
 
-		if(alert(usr, "Confirm?", "Message", "Yes", "No") != "Yes")
+		if(tgui_alert(usr, "Confirm?", "Message", list("Yes", "No")) != "Yes")
 			return
 
 		var/mob/M = locate(href_list["tdome1"])
@@ -1302,7 +1268,7 @@
 		if(!check_rights(R_FUN))
 			return
 
-		if(alert(usr, "Confirm?", "Message", "Yes", "No") != "Yes")
+		if(tgui_alert(usr, "Confirm?", "Message", list("Yes", "No")) != "Yes")
 			return
 
 		var/mob/M = locate(href_list["tdome2"])
@@ -1328,7 +1294,7 @@
 		if(!check_rights(R_FUN))
 			return
 
-		if(alert(usr, "Confirm?", "Message", "Yes", "No") != "Yes")
+		if(tgui_alert(usr, "Confirm?", "Message", list("Yes", "No")) != "Yes")
 			return
 
 		var/mob/M = locate(href_list["tdomeadmin"])
@@ -1351,7 +1317,7 @@
 		if(!check_rights(R_FUN))
 			return
 
-		if(alert(usr, "Confirm?", "Message", "Yes", "No") != "Yes")
+		if(tgui_alert(usr, "Confirm?", "Message", list("Yes", "No")) != "Yes")
 			return
 
 		var/mob/M = locate(href_list["tdomeobserve"])
@@ -1537,9 +1503,9 @@
 		//Location
 		if(isturf(T))
 			if(isarea(T.loc))
-				location_description = "([M.loc == T ? "at coordinates " : "in [M.loc] at coordinates "] [T.x], [T.y], [T.z] in area <b>[T.loc]</b>)"
+				location_description = "([M.loc == T ? "at coordinates " : "in [M.loc] at coordinates "] [COORD(T)] in area <b>[T.loc]</b>)"
 			else
-				location_description = "([M.loc == T ? "at coordinates " : "in [M.loc] at coordinates "] [T.x], [T.y], [T.z])"
+				location_description = "([M.loc == T ? "at coordinates " : "in [M.loc] at coordinates "] [COORD(T)])"
 
 		//Job + antagonist
 		if(M.mind)
@@ -1607,7 +1573,7 @@
 			to_chat(usr, "This can only be used on instances of type /mob/living")
 			return
 
-		if(alert(src.owner, "Are you sure you wish to hit [key_name(M)] with Blue Space Artillery?",  "Confirm Firing?" , "Yes" , "No") != "Yes")
+		if(tgui_alert(src.owner, "Are you sure you wish to hit [key_name(M)] with Blue Space Artillery?",  "Confirm Firing?" , list("Yes" , "No")) != "Yes")
 			return
 
 		if(BSACooldown)
@@ -1710,7 +1676,7 @@
 		var/obj/item/weapon/stamp/centcomm/S = new
 		S.stamp_paper(P)
 
-		switch(alert("Should this be sended to all fax machines?",,"Yes","No"))
+		switch(tgui_alert(usr, "Should this be sended to all fax machines?",, list("Yes","No")))
 			if("Yes")
 				send_fax(usr, P, "All")
 			if("No")
@@ -1739,7 +1705,7 @@
 		if(!check_rights(R_ADMIN))
 			return
 
-		if(alert(usr, "Confirm?", "Message", "Yes", "No") != "Yes")	return
+		if(tgui_alert(usr, "Confirm?", "Message", list("Yes", "No")) != "Yes")	return
 		var/mob/M = locate(href_list["getmob"])
 		usr.client.Getmob(M)
 
@@ -1769,7 +1735,7 @@
 			return
 
 		if(!SSticker || !SSticker.mode)
-			alert("The game hasn't started yet!")
+			tgui_alert(usr, "The game hasn't started yet!")
 			return
 
 		var/mob/M = locate(href_list["traitor"])
@@ -1838,13 +1804,13 @@
 			paths += path
 
 		if(!paths)
-			alert("The path list you sent is empty")
+			tgui_alert(usr, "The path list you sent is empty")
 			return
 		if(length(paths) > max_paths_length)
-			alert("Select fewer object types, (max [max_paths_length])")
+			tgui_alert(usr, "Select fewer object types, (max [max_paths_length])")
 			return
 		else if(length(removed_paths))
-			alert("Removed:\n" + jointext(removed_paths, "\n"))
+			tgui_alert(usr, "Removed:\n" + jointext(removed_paths, "\n"))
 
 		var/list/offset = splittext(href_list["offset"],",")
 		var/number = clamp(text2num(href_list["object_count"]), 1, 100)
@@ -1971,7 +1937,7 @@
 		if(src.admincaster_feed_channel.channel_name == "" || src.admincaster_feed_channel.channel_name == "\[REDACTED\]" || check )
 			src.admincaster_screen=7
 		else
-			var/choice = alert("Please confirm Feed channel creation","Network Channel Handler","Confirm","Cancel")
+			var/choice = tgui_alert(usr, "Please confirm Feed channel creation","Network Channel Handler", list("Confirm","Cancel"))
 			if(choice=="Confirm")
 				var/datum/feed_channel/newChannel = new /datum/feed_channel
 				newChannel.channel_name = src.admincaster_feed_channel.channel_name
@@ -2056,7 +2022,7 @@
 		if(src.admincaster_feed_message.author == "" || src.admincaster_feed_message.body == "")
 			src.admincaster_screen = 16
 		else
-			var/choice = alert("Please confirm Wanted Issue [(input_param==1) ? ("creation.") : ("edit.")]","Network Security Handler","Confirm","Cancel")
+			var/choice = tgui_alert(usr, "Please confirm Wanted Issue [(input_param==1) ? ("creation.") : ("edit.")]","Network Security Handler", list("Confirm","Cancel"))
 			if(choice=="Confirm")
 				if(input_param==1)          //If input_param == 1 we're submitting a new wanted issue. At 2 we're just editing an existing one. See the else below
 					var/datum/feed_message/WANTED = new /datum/feed_message
@@ -2078,7 +2044,7 @@
 		src.access_news_network()
 
 	else if(href_list["ac_cancel_wanted"])
-		var/choice = alert("Please confirm Wanted Issue removal","Network Security Handler","Confirm","Cancel")
+		var/choice = tgui_alert(usr, "Please confirm Wanted Issue removal","Network Security Handler", list("Confirm","Cancel"))
 		if(choice=="Confirm")
 			news_network.wanted_issue = null
 			for(var/obj/machinery/newscaster/NEWSCASTER in allCasters)
@@ -2169,7 +2135,7 @@
 		if(!isnum(bookid))
 			return
 
-		var/DBQuery/query = dbcon_old.NewQuery("SELECT content FROM library WHERE id = '[bookid]'")
+		var/DBQuery/query = dbcon.NewQuery("SELECT content FROM erro_library WHERE id = '[bookid]'")
 
 		if(!query.Execute())
 			return
@@ -2188,14 +2154,14 @@
 		if(!check_rights(R_PERMISSIONS))
 			return
 
-		if(alert(usr, "Confirm restoring?", "Message", "Yes", "No") != "Yes")
+		if(tgui_alert(usr, "Confirm restoring?", "Message", list("Yes", "No")) != "Yes")
 			return
 		var/bookid = text2num(href_list["restorebook"])
 
 		if(!isnum(bookid))
 			return
 
-		var/DBQuery/query = dbcon_old.NewQuery("SELECT title FROM library WHERE id = '[bookid]'")
+		var/DBQuery/query = dbcon.NewQuery("SELECT title FROM erro_library WHERE id = '[bookid]'")
 		if(!query.Execute())
 			return
 
@@ -2205,7 +2171,7 @@
 		else
 			return
 
-		query = dbcon_old.NewQuery("UPDATE library SET deletereason = NULL WHERE id = '[bookid]'")
+		query = dbcon.NewQuery("UPDATE erro_library SET deletereason = NULL WHERE id = '[bookid]'")
 		if(!query.Execute())
 			return
 
@@ -2217,7 +2183,7 @@
 		if(!check_rights(R_PERMISSIONS))
 			return
 
-		if(alert(usr, "Confirm removal?", "Message", "Yes", "No") != "Yes")
+		if(tgui_alert(usr, "Confirm removal?", "Message", list("Yes", "No")) != "Yes")
 			return
 
 		var/bookid = text2num(href_list["deletebook"])
@@ -2225,7 +2191,7 @@
 		if(!isnum(bookid))
 			return
 
-		var/DBQuery/query = dbcon_old.NewQuery("SELECT title FROM library WHERE id = '[bookid]'")
+		var/DBQuery/query = dbcon.NewQuery("SELECT title FROM erro_library WHERE id = '[bookid]'")
 
 		if(!query.Execute())
 			return
@@ -2236,7 +2202,7 @@
 		else
 			return
 
-		query = dbcon_old.NewQuery("DELETE FROM library WHERE id='[bookid]'")
+		query = dbcon.NewQuery("DELETE FROM erro_library WHERE id='[bookid]'")
 		if(!query.Execute())
 			return
 
@@ -2277,7 +2243,7 @@
 
 	else if(href_list["global_salary"])
 		if(!check_rights(R_EVENT))	return
-		if(alert(usr, "Are you sure you want to globally change the salary?", "Confirm", "Yes", "No") != "Yes")
+		if(tgui_alert(usr, "Are you sure you want to globally change the salary?", "Confirm", list("Yes", "No")) != "Yes")
 			return
 		var/list/rate = list("+100%", "+50%", "+25%", "0", "-25%", "-50%", "-100%")
 		var/input_rate = input(usr, "Please, select a rate!", "Salary Rate", null) as null|anything in rate

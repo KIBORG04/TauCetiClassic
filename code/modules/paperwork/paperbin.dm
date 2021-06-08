@@ -12,6 +12,7 @@
 
 
 /obj/item/weapon/paper_bin/MouseDrop(mob/user as mob)
+	. = ..()
 	if(user == usr && (!usr.incapacitated() && (usr.contents.Find(src) || in_range(src, usr))))
 		if(!istype(usr, /mob/living/carbon/slime) && !istype(usr, /mob/living/simple_animal) && !isessence(usr))
 			if( !usr.get_active_hand() )		//if active hand is empty
@@ -27,7 +28,7 @@
 /obj/item/weapon/paper_bin/attack_hand(mob/user)
 	var/response = ""
 	if(!papers.len > 0)
-		response = alert(user, "Do you take regular paper, or Carbon copy paper?", "Paper type request", "Regular", "Carbon-Copy", "Cancel")
+		response = tgui_alert(user, "Do you take regular paper, or Carbon copy paper?", "Paper type request", list("Regular", "Carbon-Copy", "Cancel"))
 		if (response != "Regular" && response != "Carbon-Copy")
 			add_fingerprint(user)
 			return

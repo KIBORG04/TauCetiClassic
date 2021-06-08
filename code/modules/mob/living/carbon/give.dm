@@ -2,6 +2,8 @@
 	set category = "IC"
 	set name = "Give"
 
+	if(!M)
+		return
 
 	if(!M.can_accept_gives(src, show_warnings = TRUE) || !can_give(M, show_warnings = TRUE) || M.client == null)
 		return
@@ -16,7 +18,7 @@
 		if(I.w_class < ITEM_SIZE_LARGE)
 			to_chat(src, "<span class='red'>[I] is too small for [name] to hold.</span>")
 			return
-	switch(alert(M,"[src] wants to give you \a [I]?",,"Yes","No"))
+	switch(tgui_alert(M,"[src] wants to give you \a [I]?",, list("Yes","No")))
 		if("Yes")
 			if(!can_give(M, show_warnings = TRUE))
 				return

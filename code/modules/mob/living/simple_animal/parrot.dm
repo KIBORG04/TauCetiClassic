@@ -47,7 +47,7 @@
 	response_help  = "pets the"
 	response_disarm = "gently moves aside the"
 	response_harm   = "swats the"
-	stop_automated_movement = 1
+	stop_automated_movement = TRUE
 	universal_speak = 1
 
 	has_head = TRUE
@@ -708,6 +708,7 @@
 	else
 		speak += pick("...alive?", "This isn't parrot heaven!", "I live, I die, I live again!", "The void fades!")
 	. = ..()
+	chief_animal_list += src
 
 /mob/living/simple_animal/parrot/Poly/Life()
 	if(!stat && SSticker.current_state == GAME_STATE_FINISHED && !memory_saved)

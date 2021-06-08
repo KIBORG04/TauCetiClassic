@@ -206,11 +206,9 @@
 		else
 			if(message_mode)
 				if(message_mode in (radiochannels | "department"))
-					if(l_ear && istype(l_ear,/obj/item/device/radio))
-						l_ear.talk_into(src,message, message_mode, verb, speaking)
+					if(l_ear && istype(l_ear,/obj/item/device/radio) && l_ear.talk_into(src,message, message_mode, verb, speaking))
 						used_radios += l_ear
-					else if(r_ear && istype(r_ear,/obj/item/device/radio))
-						r_ear.talk_into(src,message, message_mode, verb, speaking)
+					else if(r_ear && istype(r_ear,/obj/item/device/radio) && r_ear.talk_into(src,message, message_mode, verb, speaking))
 						used_radios += r_ear
 
 	if((species.name == VOX || species.name == VOX_ARMALIS) && prob(20))
@@ -237,7 +235,7 @@
 			return 1
 		if(isgod(other))
 			var/mob/living/simple_animal/shade/god/G = other
-			if(l_hand == G.container || r_hand == G.container)
+			if(G.my_religion.is_member(src))
 				return TRUE
 
 	//This is already covered by mob/say_understands()

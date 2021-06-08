@@ -165,11 +165,13 @@
 
 	for(var/type in has_bodypart)
 		var/path = has_bodypart[type]
-		new path(null, H)
+		var/obj/item/organ/external/O = new path(null)
+		O.insert_organ(H)
 
 	for(var/type in has_organ)
 		var/path = has_organ[type]
-		new path(null, H)
+		var/obj/item/organ/internal/O = new path(null)
+		O.insert_organ(H)
 
 	if(flags[IS_SYNTHETIC])
 		for(var/obj/item/organ/internal/IO in H.organs)
@@ -217,8 +219,12 @@
 	for(var/moveset in moveset_types)
 		H.add_moveset(new moveset(), MOVESET_SPECIES)
 
-/datum/species/proc/on_loose(mob/living/carbon/human/H)
+	SEND_SIGNAL(H, COMSIG_SPECIES_GAIN, src)
+
+/datum/species/proc/on_loose(mob/living/carbon/human/H, new_species)
 	H.remove_moveset_source(MOVESET_SPECIES)
+
+	SEND_SIGNAL(H, COMSIG_SPECIES_LOSS, src, new_species)
 
 /datum/species/proc/regen(mob/living/carbon/human/H) // Perhaps others will regenerate in different ways?
 	return
@@ -472,10 +478,10 @@
 		IS_WHITELISTED = TRUE
 		,NO_SCAN = TRUE
 		,FACEHUGGABLE = TRUE
-		,HAS_TAIL = TRUE 
+		,HAS_TAIL = TRUE
 		,SPRITE_SHEET_RESTRICTION = TRUE
 		,HAS_HAIR_COLOR = TRUE
-		,NO_FAT = TRUE 
+		,NO_FAT = TRUE
 	)
 	has_organ = list(
 		O_HEART   = /obj/item/organ/internal/heart/vox,
@@ -671,6 +677,7 @@
 	,NO_PAIN = TRUE
 	,NO_FINGERPRINT = TRUE
 	,IS_PLANT = TRUE
+	,NO_VOMIT = TRUE
 	,RAD_ABSORB = TRUE
 	)
 
@@ -845,6 +852,7 @@
 	..()
 	H.verbs += /mob/living/carbon/human/proc/IPC_change_screen
 	H.verbs += /mob/living/carbon/human/proc/IPC_toggle_screen
+	H.verbs += /mob/living/carbon/human/proc/IPC_display_text
 	var/obj/item/organ/external/head/robot/ipc/BP = H.bodyparts_by_name[BP_HEAD]
 	if(BP)
 		H.set_light(BP.screen_brightness)
@@ -852,6 +860,7 @@
 /datum/species/machine/on_loose(mob/living/carbon/human/H)
 	H.verbs -= /mob/living/carbon/human/proc/IPC_change_screen
 	H.verbs -= /mob/living/carbon/human/proc/IPC_toggle_screen
+	H.verbs -= /mob/living/carbon/human/proc/IPC_display_text
 	var/obj/item/organ/external/head/robot/ipc/BP = H.bodyparts_by_name[BP_HEAD]
 	if(BP && BP.screen_toggle)
 		H.set_light(0)
@@ -926,6 +935,7 @@
 	,NO_EMBED = TRUE
 	,NO_MINORCUTS = TRUE
 	,NO_EMOTION = TRUE
+	,NO_VOMIT = TRUE
 	,NO_MUTATION = TRUE
 	)
 
@@ -949,6 +959,8 @@
 
 /datum/species/skeleton/handle_post_spawn(mob/living/carbon/human/H)
 	H.gender = NEUTER
+
+	H.status_flags &= ~(CANSTUN | CANPARALYSE)
 
 	return ..()
 

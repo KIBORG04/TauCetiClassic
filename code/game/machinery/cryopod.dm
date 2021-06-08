@@ -182,7 +182,7 @@ var/global/list/frozen_items = list()
 
 			//Update any existing objectives involving this mob.
 			for(var/datum/objective/O in all_objectives)
-				if(istype(O,/datum/objective/mutiny) && O.target == occupant.mind) //We don't want revs to get objectives that aren't for heads of staff. Letting them win or lose based on cryo is silly so we remove the objective.
+				if(istype(O,/datum/objective/rp_rev) && O.target == occupant.mind) //We don't want revs to get objectives that aren't for heads of staff. Letting them win or lose based on cryo is silly so we remove the objective.
 					qdel(O) //TODO: Update rev objectives on login by head (may happen already?) ~ Z
 				else if(O.target && istype(O.target, /datum/mind))
 					if(O.target == occupant.mind)
@@ -265,7 +265,7 @@ var/global/list/frozen_items = list()
 		user.SetNextMove(CLICK_CD_MELEE)
 
 		if(M.client)
-			if(alert(M,"Would you like to enter cryosleep?",,"Yes","No") == "Yes")
+			if(tgui_alert(M,"Would you like to enter cryosleep?",, list("Yes","No")) == "Yes")
 				if(!M || !grab || !grab.affecting)
 					return
 				willing = TRUE

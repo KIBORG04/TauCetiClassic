@@ -119,7 +119,7 @@
 
 /datum/admins/proc/makeRevs()
 
-	var/datum/game_mode/revolution/temp = new
+	var/datum/game_mode/rp_revolution/temp = new
 	if(config.protect_roles_from_antagonist)
 		temp.restricted_jobs += temp.protected_jobs
 
@@ -154,7 +154,7 @@
 	for(var/mob/dead/observer/G in player_list)
 		if(!jobban_isbanned(G, ROLE_WIZARD) && !jobban_isbanned(G, "Syndicate") && !role_available_in_minutes(G, ROLE_WIZARD))
 			spawn(0)
-				switch(alert(G, "Do you wish to be considered for the position of Space Wizard Foundation 'diplomat'?","Please answer in 30 seconds!","Yes","No"))
+				switch(tgui_alert(G, "Do you wish to be considered for the position of Space Wizard Foundation 'diplomat'?","Please answer in 30 seconds!", list("Yes","No")))
 					if("Yes")
 						if((world.time-time_passed)>300)//If more than 30 game seconds passed.
 							return
@@ -207,8 +207,6 @@
 			H = pick(candidates)
 			H.mind.make_Cultist()
 			candidates.Remove(H)
-			temp.grant_runeword(H)
-
 		return 1
 
 	return 0
@@ -224,7 +222,7 @@
 	for(var/mob/dead/observer/G in player_list)
 		if(!jobban_isbanned(G, ROLE_OPERATIVE) && !jobban_isbanned(G, "Syndicate") && !role_available_in_minutes(G, ROLE_OPERATIVE))
 			spawn(0)
-				switch(alert(G,"Do you wish to be considered for a nuke team being sent in?","Please answer in 30 seconds!","Yes","No"))
+				switch(tgui_alert(G,"Do you wish to be considered for a nuke team being sent in?","Please answer in 30 seconds!", list("Yes","No")))
 					if("Yes")
 						if((world.time-time_passed)>300)//If more than 30 game seconds passed.
 							return
@@ -301,7 +299,7 @@
 	//Generates a list of commandos from active ghosts. Then the user picks which characters to respawn as the commandos.
 	for(var/mob/dead/observer/G in player_list)
 		spawn(0)
-			switch(alert(G,"Do you wish to be considered for an elite syndicate strike team being sent in?","Please answer in 30 seconds!","Yes","No"))
+			switch(tgui_alert(G,"Do you wish to be considered for an elite syndicate strike team being sent in?","Please answer in 30 seconds!", list("Yes","No")))
 				if("Yes")
 					if((world.time-time_passed)>300)//If more than 30 game seconds passed.
 						return
@@ -354,36 +352,6 @@
 				new /obj/effect/spawner/newbomb/timer/syndicate(L.loc)
 
 	return 1
-
-
-/datum/admins/proc/makeGangsters()
-
-	var/datum/game_mode/gang/temp = new
-	if(config.protect_roles_from_antagonist)
-		temp.restricted_jobs += temp.protected_jobs
-
-	var/list/mob/living/carbon/human/candidates = list()
-	var/mob/living/carbon/human/H = null
-
-	for(var/mob/living/carbon/human/applicant in player_list)
-		if(ROLE_REV in applicant.client.prefs.be_role)
-			if(!applicant.stat)
-				if(applicant.mind)
-					if(!applicant.mind.special_role)
-						if(!jobban_isbanned(applicant, ROLE_REV) && !jobban_isbanned(applicant, "Syndicate") && !role_available_in_minutes(applicant, ROLE_REV))
-							if(!(applicant.job in temp.restricted_jobs))
-								candidates += applicant
-
-	if(candidates.len >= 2)
-		H = pick(candidates)
-		H.mind.make_Gang("A")
-		candidates.Remove(H)
-		H = pick(candidates)
-		H.mind.make_Gang("B")
-		return 1
-
-	return 0
-
 
 /datum/admins/proc/makeBody(mob/dead/observer/G_found) // Uses stripped down and bastardized code from respawn character
 	if(!G_found || !G_found.key)	return
@@ -448,7 +416,7 @@
 	//Generates a list of candidates from active ghosts.
 	for(var/mob/dead/observer/G in player_list)
 		spawn(0)
-			switch(alert(G,"Do you wish to be considered for a vox raiding party arriving on the station?","Please answer in 30 seconds!","Yes","No"))
+			switch(tgui_alert(G,"Do you wish to be considered for a vox raiding party arriving on the station?","Please answer in 30 seconds!", list("Yes","No")))
 				if("Yes")
 					if((world.time-time_passed)>300)//If more than 30 game seconds passed.
 						return
@@ -552,7 +520,7 @@
 
 	for(var/mob/dead/observer/G in player_list)
 		spawn(0)
-			switch(alert(G,"Do you wish to be considered for Abductor Team?","Please answer in 30 seconds!","Yes","No"))
+			switch(tgui_alert(G,"Do you wish to be considered for Abductor Team?","Please answer in 30 seconds!", list("Yes","No")))
 				if("Yes")
 					if((world.time-time_passed)>300)//If more than 30 game seconds passed.
 						return

@@ -139,7 +139,7 @@
 			I.alpha = UI_style_alpha_new
 
 
-	if(alert("Like it? Save changes?",,"Yes", "No") == "Yes")
+	if(tgui_alert(usr, "Like it? Save changes?",, list("Yes", "No")) == "Yes")
 		prefs.UI_style = UI_style_new
 		prefs.UI_style_alpha = UI_style_alpha_new
 		prefs.UI_style_color = UI_style_color_new
@@ -278,3 +278,83 @@ var/global/list/ghost_orbits = list(GHOST_ORBIT_CIRCLE,GHOST_ORBIT_TRIANGLE,GHOS
 	prefs.tgui_fancy = !prefs.tgui_fancy
 	prefs.save_preferences()
 	feedback_add_details("admin_verb", "TFTGUI")
+
+/client/verb/toggle_tooltip()
+	set name = "Tooltip: Show/Hide"
+	set category = "Preferences"
+	set desc = "Toggle Name of Items"
+
+	prefs.tooltip = !prefs.tooltip
+
+	if(prefs.tooltip)
+		tooltip.set_state(TRUE)
+	else
+		tooltip.set_state(FALSE)
+
+	prefs.save_preferences()
+	to_chat(src, "Name of items [prefs.tooltip ? "enabled" : "disabled"].")
+	feedback_add_details("admin_verb", "TTIP")
+
+/client/verb/change_font_tooltip()
+	set name = "Tooltip: Change Font"
+	set category = "Preferences"
+	set desc = "Toggle Font of Names of Items"
+
+	var/list/fonts = list("System", "Fixedsys", "Small Fonts", "Times New Roman", "Serif", "Verdana", "Custom Font")
+
+	var/font = input(usr, "Font of Names of Items:", "Font", prefs.tooltip_font) as null|anything in fonts | prefs.tooltip_font
+
+	if(font == "Custom Font")
+		font = sanitize(input("Enter the font that you have on your computer:", "Font") as null|text)
+
+	if(!font)
+		return
+
+	prefs.tooltip_font = font
+
+	prefs.save_preferences()
+	feedback_add_details("admin_verb", "FTIP")
+
+/client/verb/change_size_tooltip()
+	set name = "Tooltip: Change Size"
+	set category = "Preferences"
+	set desc = "Change Size of Names of Items"
+
+	prefs.tooltip_size = input(usr, "Введите размер Названий Предметов") as num
+
+	tooltip.font_size = prefs.tooltip_size
+	prefs.save_preferences()
+	feedback_add_details("admin_verb", "LTIP")
+
+/client/verb/toggle_outline()
+	set name = "Toggle Outline"
+	set category = "Preferences"
+	set desc = "Toggle Outline"
+
+	prefs.outline_enabled = !prefs.outline_enabled
+	prefs.save_preferences()
+	to_chat(src, "Outline is [prefs.outline_enabled ? "enabled" : "disabled"].")
+	feedback_add_details("admin_verb", "TO")
+
+/client/verb/change_outline_color()
+	set name = "Change Outline Color"
+	set category = "Preferences"
+	set desc = "Change Outline Color"
+
+	var/pickedOutlineColor = input(usr, "Choose your outline color.", "General Preference", prefs.outline_color) as color|null
+	if(!pickedOutlineColor)
+		return
+	prefs.outline_color = pickedOutlineColor
+	prefs.save_preferences()
+	to_chat(src, "Outline color changed.")
+	feedback_add_details("admin_verb", "COC")
+
+/client/verb/toggle_eorg()
+	set name = "Toggle End of Round Deathmatch"
+	set category = "Preferences"
+	set desc = "At the end of the round you will be teleported to thunderdome to freely bash your fellow colleagues."
+
+	prefs.eorg_enabled = !prefs.eorg_enabled
+	prefs.save_preferences()
+	to_chat(src, "You [prefs.eorg_enabled ? "will be" : "won't be"] teleported to Thunderdome at round end.")
+	feedback_add_details("admin_verb", "ED")
