@@ -1,6 +1,6 @@
 SUBSYSTEM_DEF(time_track)
 	name = "Time Tracking"
-	wait = 100
+	wait = SS_WAIT_TIMETRACK
 	flags = SS_NO_TICK_CHECK
 	init_order = SS_INIT_TIMETRACK
 

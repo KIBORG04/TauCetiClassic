@@ -59,7 +59,7 @@
 	SEND_SIGNAL(src, COMSIG_MOVABLE_UPDATE_GLIDE_SIZE, target)
 	glide_size = target
 
-	buckled_mob.set_glide_size(target)
+	buckled_mob?.set_glide_size(target)
 
 /atom/movable/Move(NewLoc, Dir = 0, step_x = 0, step_y = 0, glide_size_override = 0)
 	if(!loc || !NewLoc || freeze_movement)

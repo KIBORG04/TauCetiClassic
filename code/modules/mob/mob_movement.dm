@@ -155,7 +155,6 @@
 			if("walk")
 				add_delay += 2.5+config.walk_speed
 		add_delay += mob.movement_delay()
-		move_delay += add_delay
 
 		if(mob.pulledby || mob.buckled) // Wheelchair driving!
 			if(istype(mob.loc, /turf/space))
@@ -171,9 +170,6 @@
 						return // No hands to drive your chair? Tough luck!
 				add_delay += 2
 				return mob.buckled.relaymove(mob, direct, move_delay + add_delay)
-
-		move_delay += add_delay
-		mob.set_glide_size(DELAY_TO_GLIDE_SIZE(move_delay)) // set it now in case of pulled objects
 
 		//We are now going to move
 		moving = 1
@@ -197,9 +193,6 @@
 								if ((diag - 1) & diag)
 								else
 									diag = null
-								// Uncomment when you add diagonal deceleration
-								// add_delay += diag_delay
-								// mob.set_glide_size(DELAY_TO_GLIDE_SIZE(add_delay))
 								if ((get_dist(mob, M) > 1 || diag))
 									step(M, get_dir(M.loc, T))
 				else
@@ -236,7 +229,11 @@
 			G.adjust_position()
 
 		if((direct & (direct - 1)) && mob.loc == n) //moved diagonally successfully
-			move_delay += add_delay
+			add_delay *= 2
+
+		move_delay += add_delay
+		mob.set_glide_size(DELAY_TO_GLIDE_SIZE(add_delay)) // set it now in case of pulled objects
+
 		moving = FALSE
 		if(mob && .)
 			mob.throwing = FALSE
