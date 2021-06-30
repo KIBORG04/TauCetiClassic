@@ -274,7 +274,7 @@
 	if(!target.can_action(game, src, "communion"))
 		return
 	if(target)
-		to_chat(body,"<span class='warning'>Вы призываете дух [target.body.real_name] и узнаете что их роль - <b>[target.name]<b>.</span>")
+		to_chat(body,"<span class='warning'>Вы призываете дух [target.body.real_name] и узнаете что его роль - <b>[target.name]</b>.</span>")
 		add_note("N[game.turn] - [target.body.real_name] - [target.name]")
 
 /datum/mafia_role/md

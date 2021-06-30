@@ -574,7 +574,7 @@
 			lobby_member["status"] = "Готов"
 			if(key in global.mafia_bad_signup)
 				lobby_member["status"] = "Отключен"
-			lobby_member["spectating"] = "Призрак"
+			lobby_member["spectating"] = "Игрок"
 			if(key in spectators)
 				lobby_member["spectating"] = "Наблюдатель"
 			lobby_data += list(lobby_member)
@@ -626,7 +626,7 @@
 				qdel(src)
 			if("next_phase")
 				var/datum/timedevent/timer = SStimer.timer_id_dict["timerid[next_phase_timer]"]
-				if(!timer.spent)
+				if(!timer?.spent)
 					var/datum/callback/tc = timer.callBack
 					deltimer(next_phase_timer)
 					tc.InvokeAsync()
